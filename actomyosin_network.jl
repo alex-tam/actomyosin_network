@@ -9,7 +9,7 @@ function actomyosin_network(parN, parA, parM, par, trial)
     # Pre-allocate
     Force = [[0.0, 0.0, 0.0, 0.0] for idx in 1:parN.nT]; # [pN] Network force
     Curvature = [0.0 for idx in 1:parN.nT]; # Mean network curvature
-    Dipole_Index = [0.0 for idx in 1:parN.nT]; # Mean dipole index
+    Index = [0.0 for idx in 1:parN.nT]; # Mean two-filament index
     # Generate initial conditions
     state = State{Float64}(Vector{Vector{Vector}}(), Vector{Vector}()); # Initialise empty State struct
     mm = Vector{Myosin_Motor}(); # Pre-allocate empty myosin motors
@@ -31,8 +31,8 @@ function actomyosin_network(parN, parA, parM, par, trial)
             Curvature[i] = 0;
         end
         savefig("actomyosin_curvature-$par-trial-$trial.png"); # Save histogram of filament mean curvature
-        Dipole_Index[i] = dipole_index(mm, state, parN, Lxx, Lxy, Lyx, Lyy); # Compute mean dipole index at current time step
-        savefig("actomyosin_dipole_index-$par-trial-$trial.png"); # Save histogram of filament dipole index
+        Index[i] = 2f_index(mm, state, parN, Lxx, Lxy, Lyx, Lyy); # Compute mean two-filament index at current time step
+        savefig("actomyosin_2f_index-$par-trial-$trial.png"); # Save histogram of two-filament index
         pcf(af, state, Lxx, Lyy); # Compute paired distances between filament nodes
         savefig("actomyosin_pcf-$par-trial-$trial.png"); # Save plot of pair-correlation function
         # Compute force and draw network
@@ -60,10 +60,10 @@ function actomyosin_network(parN, parA, parM, par, trial)
     times, Tension, Tension_Int = draw_tension(parN, Force, parN.nT);
     @printf("Time-averaged net tension is %f pN/μm*s.\n", Tension_Int[end]/times[end])
     savefig("actomyosin_tension-par-$par-trial-$trial.png");
-    Curvature_Int, Dipole_Int = draw_tension_spatial(parN, Force, parN.nT, Curvature, Dipole_Index)
+    Curvature_Int, Index_Int = draw_tension_spatial(parN, Force, parN.nT, Curvature, Index)
     savefig("actomyosin_tension_spatial-par-$par-trial-$trial.png");
     writedlm("times.csv", times); writedlm("tension-par-$par-trial-$trial.csv", Tension);
     draw_force(parN, Force, parN.nT);
     savefig("actomyosin_force-par-$par-trial-$trial.png");
-    return state, af, mm, xl, Tension_Int[end]/times[end], Curvature_Int[end]/times[end], Dipole_Int[end]/times[end]
+    return state, af, mm, xl, Tension_Int[end]/times[end], Curvature_Int[end]/times[end], Index_Int[end]/times[end]
 end

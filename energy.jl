@@ -89,7 +89,7 @@ function energy_cross_link(l::Cross_Link, s::State{T}, parN, parA, Lxx, Lxy, Lyx
     lx2 = (x2 - l.t2[1]*Lxx/parN.lxx - l.t2[2]*Lyx/parN.lxx)*Lxx + (y2 - l.t2[1]*Lxy/parN.lyy - l.t2[2]*Lyy/parN.lyy)*Lyx;
     ly2 = (y2 - l.t2[1]*Lxy/parN.lyy - l.t2[2]*Lyy/parN.lyy)*Lyy + (x2 - l.t2[1]*Lxx/parN.lxx - l.t2[2]*Lyx/parN.lxx)*Lxy;
     # Energy
-    energy += parA.lambda_xl*((lx1 - lx2)^2 + (ly1 - ly2)^2)/(2*parN.dt); # Cross-linker drag energy
+    energy += parA.lambda_pf*((lx1 - lx2)^2 + (ly1 - ly2)^2)/(2*parN.dt); # Cross-linker drag energy
     return energy
 end
 

@@ -155,23 +155,23 @@ function draw_tension(parN, Force, time_step)
 end
 
 "Plot tension with spatial measures"
-function draw_tension_spatial(parN, Force, time_step, Curvature, Dipole_Index)
+function draw_tension_spatial(parN, Force, time_step, Curvature, Index)
     Tension = Vector{Float64}(); # Pre-allocate bulk stress
-    Tension_Int = Vector{Float64}(); Curvature_Int = Vector{Float64}(); Dipole_Int = Vector{Float64}(); # Pre-allocate time-integrated variables
+    Tension_Int = Vector{Float64}(); Curvature_Int = Vector{Float64}(); Index_Int = Vector{Float64}(); # Pre-allocate time-integrated variables
     times = (0:parN.nT-1).*parN.dt; # Vector of times at which we obtain measurements
     for i = 1:parN.nT
         Stress = [ Force[i][1]/parN.lxx Force[i][2]/parN.lyy ; Force[i][3]/parN.lxx Force[i][4]/parN.lyy];
         push!(Tension, sum(eigvals(Stress))/2);
         push!(Tension_Int, trapz(Tension, times)); # Integrate force over time
         push!(Curvature_Int, trapz(Curvature, times)); # Integrate force over time
-        push!(Dipole_Int, trapz(Dipole_Index, times)); # Integrate force over time
+        push!(Index_Int, trapz(Index, times)); # Integrate force over time
     end
     Tension_Moving = movingaverage(Tension[1:time_step], 100);
     plot(times[1:time_step], Tension[1:time_step], linewidth = 2, label = "Bulk Stress", xlabel = L"$t$", ylabel = "Bulk Stress (pN/μm)", legend=:topleft);
     plot!(times[1:time_step], Tension_Moving[1:time_step], linewidth = 2, linestyle = :dot, label = "Moving Average");
     # plot!(times[1:time_step], Curvature[1:time_step]*maximum(abs.(Tension))/maximum(Curvature), linewidth = 2, label = "Curvature");
-    plot!(times[1:time_step], Dipole_Index[1:time_step]*maximum(abs.(Tension))/maximum(abs.(Dipole_Index)), linewidth = 2, label = "Dipole Index");
-    return Curvature_Int, Dipole_Int
+    plot!(times[1:time_step], Index[1:time_step]*maximum(abs.(Tension))/maximum(abs.(Index)), linewidth = 2, label = "Two-Filament Index");
+    return Curvature_Int, Index_Int
 end
 
 "Integrate vector data using the trapezoidal rule"

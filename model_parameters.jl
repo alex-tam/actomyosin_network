@@ -17,12 +17,12 @@ end
 
 "Actin filament properties"
 @with_kw struct Actin_Properties
-    nSeg::Int = 4; # [-] Number of segments
-    LSeg::Float64 = 0.25 # [μm] Equilibrium segment length
+    nSeg::Int = 5; # [-] Number of segments
+    LSeg::Float64 = 0.2 # [μm] Equilibrium segment length
     k::Float64 = 1000 # [pN/μm] Spring constant
     lambda_a::Float64 = 0.01 # [pN/(μm^2)*s] Actin-background drag coefficient
     kappa::Float64 = 0.073 # [pN*μm^2] Flexural rigidity
-    lambda_xl::Float64 = 20.0 # [pN/μm*s] Cross-linker drag coefficient
+    lambda_pf::Float64 = 30.0 # [pN/μm*s] Protein friction drag coefficient
     k_off::Float64 = 0.04 # [/filament/s] Turnover rate
     k_p::Float64 = 0.0 # [/filament/s] Polymerisation rate
 end

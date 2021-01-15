@@ -3,12 +3,12 @@
 
 "Actin filament curvature"
 function curvature(af, s, Lxx, Lxy, Lyx, Lyy)
-    mean_filament_curvatures = Vector{Float64}(); # Pre-allocate mean curvature data
+    filament_curvatures = Vector{Float64}(); # Pre-allocate mean curvature data
     # Loop over filaments
     for j = 1:length(af)
         f::Actin_Filament = af[j]; # Extract current filament
         seg_lengths = get_segment_lengths(f, s, Lxx, Lxy, Lyx, Lyy); # Dimensional segment lengths
-        total_filament_curvature = 0.0; # Pre-allocate total curvature of current filament
+        total_filament_curvature = 0.0; # Pre-allocate integrated curvature of current filament
         # Compute curvature at interior nodes
         for i = 1:length(s.an[f.index])-2 
             # Extract physical positions of plus node
@@ -23,20 +23,20 @@ function curvature(af, s, Lxx, Lxy, Lyx, Lyy)
             # Compute numerical second derivatives
             L01 = seg_lengths[i]; L12 = seg_lengths[i+1]; # Extract segment lengths
             avl = (L01 + L12)/2; # Average length
-            ddfx = (xp-xc)/L12 - (xc-xm)/L01; # Numerical second derivative (x)
-            ddfy = (yp-yc)/L12 - (yc-ym)/L01; # Numerical second derivative (y)
-            # Add contribution to curvature
-            total_filament_curvature += (ddfx^2 + ddfy^2)/avl; # Actin filament curvature
+            ddfx = ((xp-xc)/L12 - (xc-xm)/L01)/avl; # Numerical second derivative (x)
+            ddfy = ((yp-yc)/L12 - (yc-ym)/L01)/avl; # Numerical second derivative (y)
+            # Add contribution to integrated curvature
+            total_filament_curvature += sqrt(ddfx^2 + ddfy^2)*avl;
         end
-        push!(mean_filament_curvatures, total_filament_curvature/(length(s.an[f.index])-2));
+        push!(filament_curvatures, total_filament_curvature);
     end
-    histogram(mean_filament_curvatures)
-    return mean(mean_filament_curvatures)
+    histogram(filament_curvatures)
+    return mean(filament_curvatures)
 end
 
-"Dipole index for filament pairs with an attached motor"
-function dipole_index(mm, s, parN, Lxx, Lxy, Lyx, Lyy)
-    dipole_index = Vector{Float64}(); # Pre-allocate dipole index data
+"Two-filament index"
+function 2f_index(mm, s, parN, Lxx, Lxy, Lyx, Lyy)
+    index = Vector{Float64}(); # Pre-allocate index data
     # Loop over motors
     for i = 1:length(mm)
         m::Myosin_Motor = mm[i]; # Extract current motor
@@ -56,16 +56,16 @@ function dipole_index(mm, s, parN, Lxx, Lxy, Lyx, Lyy)
         vec1 = [px1 - mx1, py1 - my1]; # Vector between motor and plus end of filament 1
         vec2 = [px2 - mx2, py2 - my2]; # Vector between motor and plus end of filament 2
         theta = acos( (vec1[1]*vec2[1] + vec1[2]*vec2[2])/( sqrt(vec1[1]^2 + vec1[2]^2)*sqrt(vec2[1]^2 + vec2[2]^2) ) ); # Angle between vectors
-        # Compute dipole index
+        # Compute index
         if all(s.mp[i] .<=1)
-            Id = (s.mp[i][1] + s.mp[i][2] - (1-s.mp[i][1]) - (1-s.mp[i][2]))*(1-cos(theta/2)); # Dipole index based on four filament branches
+            Id = (s.mp[i][1] + s.mp[i][2] - (1-s.mp[i][1]) - (1-s.mp[i][2]))*(1-cos(theta/2)); # Index based on four filament branches
         else
             Id = 0; # Return zero if motor is detached
         end
-        push!(dipole_index, Id);
+        push!(index, Id);
     end
-    histogram(dipole_index)
-    return mean(dipole_index)
+    histogram(index)
+    return mean(index)
 end
 
 "Pair correlation function"
