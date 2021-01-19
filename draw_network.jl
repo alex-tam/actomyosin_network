@@ -1,4 +1,4 @@
-# Draw actomyosin networks, force components, and tension
+# Draw actomyosin networks, force components, and stress
 # Alex Tam, 12/10/2020
 
 "Draw the network configuration"
@@ -139,38 +139,38 @@ function draw_force(parN, Force, time_step)
     plot(p1, p2, layout = (1,2))
 end
 
-"Plot tension"
-function draw_tension(parN, Force, time_step)
-    Tension = Vector{Float64}(); Tension_Int = Vector{Float64}(); # Pre-allocate
+"Plot stress"
+function draw_stress(parN, Force, time_step)
+    Bulk_Stress = Vector{Float64}(); Bulk_Stress_Int = Vector{Float64}(); # Pre-allocate
     times = (0:parN.nT-1).*parN.dt; # Vector of times at which we obtain measurements
     for i = 1:parN.nT
         Stress = [ Force[i][1]/parN.lxx Force[i][2]/parN.lyy ; Force[i][3]/parN.lxx Force[i][4]/parN.lyy];
-        push!(Tension, sum(eigvals(Stress))/2);
-        push!(Tension_Int, trapz(Tension, times)); # Integrate force over time
+        push!(Bulk_Stress, sum(eigvals(Stress))/2);
+        push!(Bulk_Stress_Int, trapz(Bulk_Stress, times)); # Integrate bulk stress over time
     end
-    Tension_Moving = movingaverage(Tension[1:time_step], 100);
-    plot(times[1:time_step], Tension[1:time_step], linewidth = 2, label = "Bulk Stress", xlabel = L"$t$", ylabel = "Bulk Stress (pN/μm)", legend=:topleft);
-    plot!(times[1:time_step], Tension_Moving[1:time_step], linewidth = 2, linestyle = :dot, label = "Moving Average");
-    return times, Tension, Tension_Int
+    Bulk_Stress_Moving = movingaverage(Bulk_Stress[1:time_step], 100);
+    plot(times[1:time_step], Bulk_Stress[1:time_step], linewidth = 2, label = "Bulk Stress", xlabel = L"$t$", ylabel = "Bulk Stress (pN/μm)", legend=:topleft);
+    plot!(times[1:time_step], Bulk_Stress_Moving[1:time_step], linewidth = 2, linestyle = :dot, label = "Moving Average");
+    return times, Bulk_Stress, Bulk_Stress_Int
 end
 
-"Plot tension with spatial measures"
-function draw_tension_spatial(parN, Force, time_step, Curvature, Index)
-    Tension = Vector{Float64}(); # Pre-allocate bulk stress
+"Plot stress with spatial measures"
+function draw_stress_spatial(parN, Force, time_step, Curvature, Index)
+    Bulk_Stress = Vector{Float64}(); # Pre-allocate bulk stress
     Tension_Int = Vector{Float64}(); Curvature_Int = Vector{Float64}(); Index_Int = Vector{Float64}(); # Pre-allocate time-integrated variables
     times = (0:parN.nT-1).*parN.dt; # Vector of times at which we obtain measurements
     for i = 1:parN.nT
         Stress = [ Force[i][1]/parN.lxx Force[i][2]/parN.lyy ; Force[i][3]/parN.lxx Force[i][4]/parN.lyy];
-        push!(Tension, sum(eigvals(Stress))/2);
-        push!(Tension_Int, trapz(Tension, times)); # Integrate force over time
+        push!(Bulk_Stress, sum(eigvals(Stress))/2);
+        push!(Tension_Int, trapz(Bulk_Stress, times)); # Integrate force over time
         push!(Curvature_Int, trapz(Curvature, times)); # Integrate force over time
         push!(Index_Int, trapz(Index, times)); # Integrate force over time
     end
-    Tension_Moving = movingaverage(Tension[1:time_step], 100);
-    plot(times[1:time_step], Tension[1:time_step], linewidth = 2, label = "Bulk Stress", xlabel = L"$t$", ylabel = "Bulk Stress (pN/μm)", legend=:topleft);
+    Tension_Moving = movingaverage(Bulk_Stress[1:time_step], 100);
+    plot(times[1:time_step], Bulk_Stress[1:time_step], linewidth = 2, label = "Bulk Stress", xlabel = L"$t$", ylabel = "Bulk Stress (pN/μm)", legend=:topleft);
     plot!(times[1:time_step], Tension_Moving[1:time_step], linewidth = 2, linestyle = :dot, label = "Moving Average");
-    # plot!(times[1:time_step], Curvature[1:time_step]*maximum(abs.(Tension))/maximum(Curvature), linewidth = 2, label = "Curvature");
-    plot!(times[1:time_step], Index[1:time_step]*maximum(abs.(Tension))/maximum(abs.(Index)), linewidth = 2, label = "Two-Filament Index");
+    # plot!(times[1:time_step], Curvature[1:time_step]*maximum(abs.(Bulk_Stress))/maximum(Curvature), linewidth = 2, label = "Curvature");
+    plot!(times[1:time_step], Index[1:time_step]*maximum(abs.(Bulk_Stress))/maximum(abs.(Index)), linewidth = 2, label = "Two-Filament Index");
     return Curvature_Int, Index_Int
 end
 

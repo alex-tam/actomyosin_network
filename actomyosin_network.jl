@@ -31,7 +31,7 @@ function actomyosin_network(parN, parA, parM, par, trial)
             Curvature[i] = 0;
         end
         savefig("actomyosin_curvature-$par-trial-$trial.png"); # Save histogram of filament mean curvature
-        Index[i] = 2f_index(mm, state, parN, Lxx, Lxy, Lyx, Lyy); # Compute mean two-filament index at current time step
+        Index[i] = two_filament_index(mm, state, parN, Lxx, Lxy, Lyx, Lyy); # Compute mean two-filament index at current time step
         savefig("actomyosin_2f_index-$par-trial-$trial.png"); # Save histogram of two-filament index
         pcf(af, state, Lxx, Lyy); # Compute paired distances between filament nodes
         savefig("actomyosin_pcf-$par-trial-$trial.png"); # Save plot of pair-correlation function
@@ -57,13 +57,13 @@ function actomyosin_network(parN, parA, parM, par, trial)
     # Output
     gif(animation, "actomyosin-par-$par-trial-$trial.gif", fps = 10) # Save .gif of the network
     savefig("actomyosin_end-par-$par-trial-$trial.png");
-    times, Tension, Tension_Int = draw_tension(parN, Force, parN.nT);
-    @printf("Time-averaged net tension is %f pN/μm*s.\n", Tension_Int[end]/times[end])
-    savefig("actomyosin_tension-par-$par-trial-$trial.png");
-    Curvature_Int, Index_Int = draw_tension_spatial(parN, Force, parN.nT, Curvature, Index)
-    savefig("actomyosin_tension_spatial-par-$par-trial-$trial.png");
-    writedlm("times.csv", times); writedlm("tension-par-$par-trial-$trial.csv", Tension);
+    times, Bulk_Stress, Bulk_Stress_Int = draw_stress(parN, Force, parN.nT);
+    @printf("Time-averaged net stress is %f pN/μm*s.\n", Bulk_Stress_Int[end]/times[end])
+    savefig("actomyosin_stress-par-$par-trial-$trial.png");
+    Curvature_Int, Index_Int = draw_stress_spatial(parN, Force, parN.nT, Curvature, Index)
+    savefig("actomyosin_stress_spatial-par-$par-trial-$trial.png");
+    writedlm("times.csv", times); writedlm("stress-par-$par-trial-$trial.csv", Bulk_Stress);
     draw_force(parN, Force, parN.nT);
     savefig("actomyosin_force-par-$par-trial-$trial.png");
-    return state, af, mm, xl, Tension_Int[end]/times[end], Curvature_Int[end]/times[end], Index_Int[end]/times[end]
+    return state, af, mm, xl, Bulk_Stress_Int[end]/times[end], Curvature_Int[end]/times[end], Index_Int[end]/times[end]
 end

@@ -20,7 +20,7 @@ end
     nSeg::Int = 5; # [-] Number of segments
     LSeg::Float64 = 0.2 # [μm] Equilibrium segment length
     k::Float64 = 1000 # [pN/μm] Spring constant
-    lambda_a::Float64 = 0.01 # [pN/(μm^2)*s] Actin-background drag coefficient
+    lambda_a::Float64 = 0.05 # [pN/(μm^2)*s] Actin-background drag coefficient
     kappa::Float64 = 0.073 # [pN*μm^2] Flexural rigidity
     lambda_pf::Float64 = 30.0 # [pN/μm*s] Protein friction drag coefficient
     k_off::Float64 = 0.04 # [/filament/s] Turnover rate

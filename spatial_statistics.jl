@@ -35,7 +35,7 @@ function curvature(af, s, Lxx, Lxy, Lyx, Lyy)
 end
 
 "Two-filament index"
-function 2f_index(mm, s, parN, Lxx, Lxy, Lyx, Lyy)
+function two_filament_index(mm, s, parN, Lxx, Lxy, Lyx, Lyy)
     index = Vector{Float64}(); # Pre-allocate index data
     # Loop over motors
     for i = 1:length(mm)

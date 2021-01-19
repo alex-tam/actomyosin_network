@@ -34,26 +34,26 @@ include("energy.jl")
 
 function run_simulations()
     par_ref = 0.04;
-    nTrials = 1;
+    nTrials = 10;
     for i = 1:length(par_ref)
         par = par_ref[i]; # Select parameter
-        tension = Vector{Float64}(); # Pre-allocate time-averaged tension
+        bulk_stress = Vector{Float64}(); # Pre-allocate time-averaged bulk stress
         curvature = Vector{Float64}(); # Pre-allocate curvature
         index = Vector{Float64}(); # Pre-allocate integrated tension
         for j = 1:nTrials
             # Specify parameters
-            parN = Numerical_Parameters(nT = 101); # Initialise struct of numerical parameters
+            parN = Numerical_Parameters(); # Initialise struct of numerical parameters
             parA = Actin_Properties(k_off = par); # Initialise struct of actin filament properties
             parM = Myosin_Properties(); # Initialise struct of myosin motor properties
 
             # Run simulations
-            @time state, af, mm, xl, Tension, Curvature, Index = actomyosin_network(parN, parA, parM, i, j);
-            push!(tension, Tension); # Store time-averaged net tension
-            push!(curvature, mean(Curvature)/parN.dt); # Store time-averaged net tension
-            push!(index, mean(Index)/parN.dt); # Store time-averaged net tension
-            writedlm("tension-$par.txt", tension); # Write tension to file
-            writedlm("curvature-$par.txt", curvature); # Write tension to file
-            writedlm("index-$par.txt", index); # Write tension to file
+            @time state, af, mm, xl, Bulk_Stress, Curvature, Index = actomyosin_network(parN, parA, parM, i, j);
+            push!(bulk_stress, Bulk_Stress); # Store time-averaged net stress
+            push!(curvature, mean(Curvature)/parN.dt); # Store time-averaged integrated curvature
+            push!(index, mean(Index)/parN.dt); # Store time-averaged two-filament index
+            writedlm("bulk_stress-$par.txt", bulk_stress); # Write bulk stress to file
+            writedlm("curvature-$par.txt", curvature); # Write curvature to file
+            writedlm("index-$par.txt", index); # Write two-filament index to file
         end
     end
 end
