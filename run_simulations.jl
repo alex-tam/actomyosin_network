@@ -25,7 +25,7 @@ include("periodic.jl")
 include("Cross_Link.jl")
 include("Myosin_Motor.jl")
 include("intersection_search.jl")
-include("spatial_statistics.jl")
+include("network_statistics.jl")
 include("network_force.jl")
 include("draw_network.jl")
 include("turnover.jl")
@@ -40,6 +40,9 @@ function run_simulations()
         bulk_stress = Vector{Float64}(); # Pre-allocate time-averaged bulk stress
         curvature = Vector{Float64}(); # Pre-allocate curvature
         index = Vector{Float64}(); # Pre-allocate integrated tension
+        filament_speed = Vector{Float64}(); # Pre-allocate actin filament node speed
+        motor_speed = Vector{Float64}(); # Pre-allocate motor head speed
+        angle_roc = Vector{Float64}(); # Pre-allocate rate of change of angles
         for j = 1:nTrials
             # Specify parameters
             parN = Numerical_Parameters(); # Initialise struct of numerical parameters
@@ -47,13 +50,19 @@ function run_simulations()
             parM = Myosin_Properties(); # Initialise struct of myosin motor properties
 
             # Run simulations
-            @time state, af, mm, xl, Bulk_Stress, Curvature, Index = actomyosin_network(parN, parA, parM, i, j);
+            @time state, af, mm, xl, Bulk_Stress, Curvature, Index, Filament_Speed, Motor_Speed, Angle_ROC = actomyosin_network(parN, parA, parM, i, j);
             push!(bulk_stress, Bulk_Stress); # Store time-averaged net stress
-            push!(curvature, mean(Curvature)/parN.dt); # Store time-averaged integrated curvature
-            push!(index, mean(Index)/parN.dt); # Store time-averaged two-filament index
-            writedlm("bulk_stress-$par.txt", bulk_stress); # Write bulk stress to file
-            writedlm("curvature-$par.txt", curvature); # Write curvature to file
-            writedlm("index-$par.txt", index); # Write two-filament index to file
+            push!(curvature, Curvature); # Store time-averaged integrated curvature
+            push!(index, Index); # Store time-averaged two-filament index
+            push!(filament_speed, Filament_Speed); # Store time-averaged filament node speed
+            push!(motor_speed, Motor_Speed); # Store time-averaged motor head speed
+            push!(angle_roc, Angle_ROC); # Store time-averaged rate of change of angle
+            writedlm("bulk_stress-$par.txt", bulk_stress); # Write time-averaged bulk stress per trial to file
+            writedlm("curvature-$par.txt", curvature); # Write time-averaged curvature per trial to file
+            writedlm("index-$par.txt", index); # Write time-averaged two-filament index per trial to file
+            writedlm("filament_speed-$par.txt", filament_speed); # Write time-averaged actin filament node speed per trial to file
+            writedlm("motor_speed-$par.txt", motor_speed); # Write time-averaged motor head speed per trial to file
+            writedlm("angle_roc-$par.txt", angle_roc); # Write angle rate of change to file
         end
     end
 end

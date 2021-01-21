@@ -139,7 +139,7 @@ function draw_force(parN, Force, time_step)
     plot(p1, p2, layout = (1,2))
 end
 
-"Plot stress"
+"Plot bulk stress and moving average"
 function draw_stress(parN, Force, time_step)
     Bulk_Stress = Vector{Float64}(); Bulk_Stress_Int = Vector{Float64}(); # Pre-allocate
     times = (0:parN.nT-1).*parN.dt; # Vector of times at which we obtain measurements
@@ -154,24 +154,31 @@ function draw_stress(parN, Force, time_step)
     return times, Bulk_Stress, Bulk_Stress_Int
 end
 
-"Plot stress with spatial measures"
-function draw_stress_spatial(parN, Force, time_step, Curvature, Index)
+"Plot bulk stress against spatial measures"
+function draw_stress_spatial(parN, Force, time_step, Curvature, Index, Filament_Speed, Motor_Speed, Angle_ROC)
     Bulk_Stress = Vector{Float64}(); # Pre-allocate bulk stress
-    Tension_Int = Vector{Float64}(); Curvature_Int = Vector{Float64}(); Index_Int = Vector{Float64}(); # Pre-allocate time-integrated variables
+    Tension_Int = Vector{Float64}(); Curvature_Int = Vector{Float64}(); Index_Int = Vector{Float64}(); 
+    Filament_Speed_Int = Vector{Float64}(); Motor_Speed_Int = Vector{Float64}(); Angle_ROC_Int = Vector{Float64}(); # Pre-allocate time-integrated variables
     times = (0:parN.nT-1).*parN.dt; # Vector of times at which we obtain measurements
     for i = 1:parN.nT
         Stress = [ Force[i][1]/parN.lxx Force[i][2]/parN.lyy ; Force[i][3]/parN.lxx Force[i][4]/parN.lyy];
         push!(Bulk_Stress, sum(eigvals(Stress))/2);
         push!(Tension_Int, trapz(Bulk_Stress, times)); # Integrate force over time
-        push!(Curvature_Int, trapz(Curvature, times)); # Integrate force over time
-        push!(Index_Int, trapz(Index, times)); # Integrate force over time
+        push!(Curvature_Int, trapz(Curvature, times)); # Integrate curvature over time
+        push!(Index_Int, trapz(Index, times)); # Integrate two-filament index over time
+        push!(Filament_Speed_Int, trapz(Filament_Speed, times)); # Integrate filament node speed over time
+        push!(Motor_Speed_Int, trapz(Motor_Speed, times)); # Integrate motor head speed over time
+        push!(Angle_ROC_Int, trapz(Angle_ROC, times)); # Integrate motor head speed over time
     end
     Tension_Moving = movingaverage(Bulk_Stress[1:time_step], 100);
     plot(times[1:time_step], Bulk_Stress[1:time_step], linewidth = 2, label = "Bulk Stress", xlabel = L"$t$", ylabel = "Bulk Stress (pN/μm)", legend=:topleft);
     plot!(times[1:time_step], Tension_Moving[1:time_step], linewidth = 2, linestyle = :dot, label = "Moving Average");
     # plot!(times[1:time_step], Curvature[1:time_step]*maximum(abs.(Bulk_Stress))/maximum(Curvature), linewidth = 2, label = "Curvature");
     plot!(times[1:time_step], Index[1:time_step]*maximum(abs.(Bulk_Stress))/maximum(abs.(Index)), linewidth = 2, label = "Two-Filament Index");
-    return Curvature_Int, Index_Int
+    # plot!(times[1:time_step], Index[1:time_step]*maximum(abs.(Bulk_Stress))/maximum(abs.(Filament_Speed)), linewidth = 2, label = "Filament Speed");
+    # plot!(times[1:time_step], Index[1:time_step]*maximum(abs.(Bulk_Stress))/maximum(abs.(Motor_Speed)), linewidth = 2, label = "Motor Speed");
+    # plot!(times[1:time_step], Index[1:time_step]*maximum(abs.(Bulk_Stress))/maximum(abs.(Angle_ROC)), linewidth = 2, label = "Rate of Change of Angle");
+    return Curvature_Int, Index_Int, Filament_Speed_Int, Motor_Speed_Int, Angle_ROC_Int
 end
 
 "Integrate vector data using the trapezoidal rule"
@@ -183,7 +190,7 @@ function trapz(y, x)
     return int
 end
 
-"Moving average"
+"Calculate a moving average"
 function movingaverage(x::Vector, numofele::Int)
     BackDelta = div(numofele,2)
     ForwardDelta = isodd(numofele) ? div(numofele,2) : div(numofele,2) - 1

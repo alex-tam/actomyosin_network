@@ -1,4 +1,4 @@
-# Spatial statistics for actomyosin networks
+# Statistics for interpreting actomyosin simulation results
 # Alex Tam, 23/11/20
 
 "Actin filament curvature"
@@ -30,7 +30,7 @@ function curvature(af, s, Lxx, Lxy, Lyx, Lyy)
         end
         push!(filament_curvatures, total_filament_curvature);
     end
-    histogram(filament_curvatures)
+    # histogram(filament_curvatures)
     return mean(filament_curvatures)
 end
 
@@ -41,6 +41,9 @@ function two_filament_index(mm, s, parN, Lxx, Lxy, Lyx, Lyy)
     for i = 1:length(mm)
         m::Myosin_Motor = mm[i]; # Extract current motor
         f1::Actin_Filament = m.f1; f2::Actin_Filament = m.f2; # Extract filaments attached to current motor
+        # Calculate filament lengths
+        L1 = sum(get_segment_lengths(f1, s, Lxx, Lxy, Lyx, Lyy));
+        L2 = sum(get_segment_lengths(m.f2, s, Lxx, Lxy, Lyx, Lyy));
         # Calculate motor positions
         x1, y1, x2, y2 = get_motor_pos(m, s, Lxx, Lxy, Lyx, Lyy);
         m1x = (x1 - m.t1[1]*Lxx/parN.lxx - m.t1[2]*Lyx/parN.lxx)*Lxx + (y1 - m.t1[1]*Lxy/parN.lyy - m.t1[2]*Lyy/parN.lyy)*Lyx;
@@ -58,17 +61,89 @@ function two_filament_index(mm, s, parN, Lxx, Lxy, Lyx, Lyy)
         theta = acos( (vec1[1]*vec2[1] + vec1[2]*vec2[2])/( sqrt(vec1[1]^2 + vec1[2]^2)*sqrt(vec2[1]^2 + vec2[2]^2) ) ); # Angle between vectors
         # Compute index
         if all(s.mp[i] .<=1)
-            Id = (s.mp[i][1] + s.mp[i][2] - (1-s.mp[i][1]) - (1-s.mp[i][2]))*(1-cos(theta/2)); # Index based on four filament branches
+            Id = ( 2*(L1*s.mp[i][1] + L2*s.mp[i][2])/(L1+L2) - 1)*(1-cos(theta/2)); # Heuristic index based on four filament branches
         else
             Id = 0; # Return zero if motor is detached
         end
         push!(index, Id);
     end
-    histogram(index)
+    # histogram(index)
     return mean(index)
 end
 
-"Pair correlation function"
+"Actin filament speed"
+function filament_speed(parN, af, s, s_old, Lxx, Lxy, Lyx, Lyy)
+    node_speeds = Vector{Float64}(); # Pre-allocate vector of node speeds
+    # Loop over filaments
+    for f in af
+        # Loop over nodes
+        for i = 1:length(s.an[f.index])
+            # Extract physical node position (new)
+            xn = s.an[f.index][i][1]*Lxx + s.an[f.index][i][2]*Lyx;
+            yn = s.an[f.index][i][1]*Lxy + s.an[f.index][i][2]*Lyy;
+            # Extract physical node position (old). s_old can be used because it's computed after turnover
+            xo = s_old.an[f.index][i][1]*Lxx + s_old.an[f.index][i][2]*Lyx;
+            yo = s_old.an[f.index][i][1]*Lxy + s_old.an[f.index][i][2]*Lyy;
+            # Calculate speed
+            speed = sqrt((xn-xo)^2 + (yn-yo)^2)/parN.dt;
+            push!(node_speeds, speed)
+        end
+    end
+    # histogram(node_speeds)
+    return mean(node_speeds)
+end
+
+"Myosin motor speed"
+function motor_speed(parN, mm, s, s_old, Lxx, Lxy, Lyx, Lyy)
+    motor_speeds = Vector{Float64}(); # Pre-allocate vector of motor head speeds
+    # Loop over motors
+    for m in mm
+        # Calculate (current) filament lengths
+        L1 = sum(get_segment_lengths(m.f1, s, Lxx, Lxy, Lyx, Lyy));
+        L2 = sum(get_segment_lengths(m.f2, s, Lxx, Lxy, Lyx, Lyy));
+        # Calculate motor speeds
+        s1 = L1*(s.mp[m.index][1]-s_old.mp[m.index][1])/parN.dt;
+        s2 = L2*(s.mp[m.index][2]-s_old.mp[m.index][2])/parN.dt;
+        push!(motor_speeds, s1); push!(motor_speeds, s2);
+    end
+    # histogram(motor_speeds)
+    return mean(motor_speeds)
+end
+
+"Rate of change of angle between two filaments attached to a motor"
+function motor_angle_roc(parN, mm, s, s_old, Lxx, Lxy, Lyx, Lyy)
+    motor_angle_roc = Vector{Float64}();  # Pre-allocate vector of motor head speeds
+    # Loop over motors
+    for m in mm
+        f1::Actin_Filament = m.f1; f2::Actin_Filament = m.f2; # Extract filaments attached to current motor
+        # 1. Compute angles
+        # Find segments on which motor attaches
+        seg1, seg2, r1, r2 = get_motor_relative_pos_segment(m, s, Lxx, Lxy, Lyx, Lyy);
+        # Calculate segment positions
+        mx1, my1, px1, py1 = get_segment_nodes(f1, f1.segments[seg1], s, m.t1, parN, Lxx, Lxy, Lyx, Lyy);
+        mx2, my2, px2, py2 = get_segment_nodes(f2, f2.segments[seg2], s, m.t2, parN, Lxx, Lxy, Lyx, Lyy);
+        # Calculate angle between vectors
+        vec1 = [px1 - mx1, py1 - my1]; # Vector between motor and plus end of filament 1
+        vec2 = [px2 - mx2, py2 - my2]; # Vector between motor and plus end of filament 2
+        theta = acos( (vec1[1]*vec2[1] + vec1[2]*vec2[2])/( sqrt(vec1[1]^2 + vec1[2]^2)*sqrt(vec2[1]^2 + vec2[2]^2) ) ); # Angle between vectors
+        # Find segments on which motor attaches
+        seg1, seg2, r1, r2 = get_motor_relative_pos_segment(m, s_old, Lxx, Lxy, Lyx, Lyy);
+        # Calculate segment positions
+        mx1, my1, px1, py1 = get_segment_nodes(f1, f1.segments[seg1], s_old, m.t1, parN, Lxx, Lxy, Lyx, Lyy);
+        mx2, my2, px2, py2 = get_segment_nodes(f2, f2.segments[seg2], s_old, m.t2, parN, Lxx, Lxy, Lyx, Lyy);
+        # Calculate angle between vectors
+        vec1 = [px1 - mx1, py1 - my1]; # Vector between motor and plus end of filament 1
+        vec2 = [px2 - mx2, py2 - my2]; # Vector between motor and plus end of filament 2
+        theta_old = acos( (vec1[1]*vec2[1] + vec1[2]*vec2[2])/( sqrt(vec1[1]^2 + vec1[2]^2)*sqrt(vec2[1]^2 + vec2[2]^2) ) ); # Angle between vectors
+        # 2. Calculate rate of change of angle
+        rate = (theta - theta_old)/(parN.dt);
+        push!(motor_angle_roc, rate);
+    end
+    # histogram(motor_angle_roc)
+    return mean(motor_angle_roc)
+end
+
+"Paired distances between nodes"
 function pcf(af, s, Lxx, Lyy)
     distances = Vector{Float64}(); # Pre-allocate vector of all paired distances
     # Loop over all filament pairs
