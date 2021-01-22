@@ -1,4 +1,4 @@
-# Compute network force components and tension
+# Compute network force components
 # Alex Tam, 12/10/2020
 
 "Compute the contractile/expansive forces in the network"
