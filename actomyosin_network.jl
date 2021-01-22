@@ -13,6 +13,8 @@ function actomyosin_network(parN, parA, parM, par, trial)
     Filament_Speed = [0.0 for idx in 1:parN.nT]; # [μm/s] Mean filament node speed
     Motor_Speed = [0.0 for idx in 1:parN.nT]; # [μm/s] Mean motor head speed
     Angle_ROC = [0.0 for idx in 1:parN.nT]; # [rad/s] Mean rate of change of angle
+    Motor_Pos = [0.0 for idx in 1:parN.nT]; # [--] Mean myosin motor head position
+    Motor_Angle = [0.0 for idx in 1:parN.nT]; # [rad] Mean angle between filaments at motor binding site
     # Generate initial conditions
     state = State{Float64}(Vector{Vector{Vector}}(), Vector{Vector}()); # Initialise empty State struct
     mm = Vector{Myosin_Motor}(); # Pre-allocate empty myosin motors
@@ -33,22 +35,26 @@ function actomyosin_network(parN, parA, parM, par, trial)
         else
             Curvature[i] = 0;
         end
-        # savefig("actomyosin_curvature-$par-trial-$trial.png"); # Save histogram of filament mean curvature
+        # savefig("actomyosin_curvature-$par-trial-$trial.svg"); # Save histogram of filament mean curvature
         Index[i] = two_filament_index(mm, state, parN, Lxx, Lxy, Lyx, Lyy); # Compute mean two-filament index at current time step
-        # savefig("actomyosin_2f_index-$par-trial-$trial.png"); # Save histogram of two-filament index
+        # savefig("actomyosin_2f_index-$par-trial-$trial.svg"); # Save histogram of two-filament index
         pcf(af, state, Lxx, Lyy); # Compute paired distances between filament nodes
-        savefig("actomyosin_pcf-$par-trial-$trial.png"); # Save plot of pair-correlation function
+        savefig("actomyosin_pcf-$par-trial-$trial.svg"); # Save plot of pair-correlation function
         Filament_Speed[i] = filament_speed(parN, af, state, state_old, Lxx, Lxy, Lyx, Lyy);
-        # savefig("actomyosin_filament_speed-$par-trial-$trial.png"); # Save histogram of filament node speeds
+        # savefig("actomyosin_filament_speed-$par-trial-$trial.svg"); # Save histogram of filament node speeds
         Motor_Speed[i] = motor_speed(parN, mm, state, state_old, Lxx, Lxy, Lyx, Lyy);
-        # savefig("actomyosin_motor_speed-$par-trial-$trial.png"); # Save histogram of motor head speeds
+        # savefig("actomyosin_motor_speed-$par-trial-$trial.svg"); # Save histogram of motor head speeds
         Angle_ROC[i] = motor_angle_roc(parN, mm, state, state_old, Lxx, Lxy, Lyx, Lyy);
-        # savefig("actomyosin_angle_roc-$par-trial-$trial.png"); # Save histogram of angle rate of change
+        # savefig("actomyosin_angle_roc-$par-trial-$trial.svg"); # Save histogram of angle rate of change
+        Motor_Pos[i] = motor_position(mm, state);
+        # savefig("actomyosin_angle_roc-$par-trial-$trial.svg"); # Save histogram of myosin motor head positions
+        Motor_Angle[i] = motor_angle(mm, state, parN, Lxx, Lxy, Lyx, Lyy);
+        # savefig("actomyosin_angle_roc-$par-trial-$trial.svg"); # Save histogram of myosin motor angles
         # Compute force and draw network
         Force[i] = network_force(state, state_old, af, xl, mm, parN, parA, parM, Lxx, Lxy, Lyx, Lyy);
         draw_network(state, af, xl, mm, parN, parA, Force[i], Lxx, Lxy, Lyx, Lyy);
         if i == 1
-            savefig("actomyosin_ic-par-$par-trial-$trial.png"); # Save image of initial condition
+            savefig("actomyosin_ic-par-$par-trial-$trial.svg"); # Save image of initial condition
         end
         # Simulate one time step
         if i != parN.nT # Ensure correct looping sequence
@@ -65,17 +71,17 @@ function actomyosin_network(parN, parA, parM, par, trial)
     end
     # Output .gif and image of the network
     gif(animation, "actomyosin-par-$par-trial-$trial.gif", fps = 10)
-    savefig("actomyosin_end-par-$par-trial-$trial.png");
+    savefig("actomyosin_end-par-$par-trial-$trial.svg");
     # Draw force components
     draw_force(parN, Force, parN.nT);
-    savefig("actomyosin_force-par-$par-trial-$trial.png");
+    savefig("actomyosin_force-par-$par-trial-$trial.svg");
     # Plot bulk stress versus time
     times, Bulk_Stress, Bulk_Stress_Int = draw_stress(parN, Force, parN.nT);
     @printf("Time-averaged net stress is %f pN/μm*s.\n", Bulk_Stress_Int[end]/times[end])
-    savefig("actomyosin_stress-par-$par-trial-$trial.png");
+    savefig("actomyosin_stress-par-$par-trial-$trial.svg");
     # Plot bulk stress with network statistics versus time
-    Curvature_Int, Index_Int, Filament_Speed_Int, Motor_Speed_Int, Angle_ROC_Int = draw_stress_spatial(parN, Force, parN.nT, Curvature, Index, Filament_Speed, Motor_Speed, Angle_ROC)
-    savefig("actomyosin_stress_spatial-par-$par-trial-$trial.png");
+    Curvature_Int, Index_Int, Filament_Speed_Int, Motor_Speed_Int, Angle_ROC_Int, Motor_Pos_Int, Motor_Angle_Int = draw_stress_spatial(parN, Force, parN.nT, Curvature, Index, Filament_Speed, Motor_Speed, Angle_ROC, Motor_Pos, Motor_Angle)
+    savefig("actomyosin_stress_spatial-par-$par-trial-$trial.svg");
     # Save mean stress and spatial measures time series data to a file
     writedlm("times.csv", times);
     writedlm("stress-par-$par-trial-$trial.csv", Bulk_Stress);
@@ -83,5 +89,7 @@ function actomyosin_network(parN, parA, parM, par, trial)
     writedlm("index-par-$par-trial-$trial.csv", Index);
     writedlm("filament_speed-par-$par-trial-$trial.csv", Filament_Speed);
     writedlm("motor_speed-par-$par-trial-$trial.csv", Motor_Speed);
-    return state, af, mm, xl, Bulk_Stress_Int[end]/times[end], Curvature_Int[end]/times[end], Index_Int[end]/times[end], Filament_Speed_Int[end]/times[end], Motor_Speed_Int[end]/times[end], Angle_ROC_Int[end]/times[end]
+    writedlm("motor_pos-par-$par-trial-$trial.csv", Motor_Pos);
+    writedlm("motor_angle-par-$par-trial-$trial.csv", Motor_Angle);
+    return state, af, mm, xl, Bulk_Stress_Int[end]/times[end], Curvature_Int[end]/times[end], Index_Int[end]/times[end], Filament_Speed_Int[end]/times[end], Motor_Speed_Int[end]/times[end], Angle_ROC_Int[end]/times[end], Motor_Pos_Int[end]/times[end], Motor_Angle_Int[end]/times[end]
 end

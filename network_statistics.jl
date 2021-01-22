@@ -143,6 +143,39 @@ function motor_angle_roc(parN, mm, s, s_old, Lxx, Lxy, Lyx, Lyy)
     return mean(motor_angle_roc)
 end
 
+"Myosin motor head positions"
+function motor_position(mm, s)
+    motor_pos = Vector{Float64}();  # Pre-allocate vector of motor head speeds
+    # Loop over motors
+    for m in mm
+        push!(motor_pos, s.mp[m.index][1]);
+        push!(motor_pos, s.mp[m.index][2]);
+    end
+    # histogram(motor_pos)
+    return mean(motor_pos)
+end
+
+"Angle between two filaments attached to a motor"
+function motor_angle(mm, s, parN, Lxx, Lxy, Lyx, Lyy)
+    motor_angle = Vector{Float64}();  # Pre-allocate vector of motor head speeds
+    # Loop over motors
+    for m in mm
+        f1::Actin_Filament = m.f1; f2::Actin_Filament = m.f2; # Extract filaments attached to current motor
+        # Find segments on which motor attaches
+        seg1, seg2, r1, r2 = get_motor_relative_pos_segment(m, s, Lxx, Lxy, Lyx, Lyy);
+        # Calculate segment positions
+        mx1, my1, px1, py1 = get_segment_nodes(f1, f1.segments[seg1], s, m.t1, parN, Lxx, Lxy, Lyx, Lyy);
+        mx2, my2, px2, py2 = get_segment_nodes(f2, f2.segments[seg2], s, m.t2, parN, Lxx, Lxy, Lyx, Lyy);
+        # Calculate angle between vectors
+        vec1 = [px1 - mx1, py1 - my1]; # Vector between motor and plus end of filament 1
+        vec2 = [px2 - mx2, py2 - my2]; # Vector between motor and plus end of filament 2
+        theta = acos( (vec1[1]*vec2[1] + vec1[2]*vec2[2])/( sqrt(vec1[1]^2 + vec1[2]^2)*sqrt(vec2[1]^2 + vec2[2]^2) ) ); # Angle between vectors
+        push!(motor_angle, theta);
+    end
+    # histogram(motor_angle)
+    return mean(motor_angle)
+end
+
 "Paired distances between nodes"
 function pcf(af, s, Lxx, Lyy)
     distances = Vector{Float64}(); # Pre-allocate vector of all paired distances

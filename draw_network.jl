@@ -155,10 +155,10 @@ function draw_stress(parN, Force, time_step)
 end
 
 "Plot bulk stress against spatial measures"
-function draw_stress_spatial(parN, Force, time_step, Curvature, Index, Filament_Speed, Motor_Speed, Angle_ROC)
+function draw_stress_spatial(parN, Force, time_step, Curvature, Index, Filament_Speed, Motor_Speed, Angle_ROC, Motor_Pos, Motor_Angle)
     Bulk_Stress = Vector{Float64}(); # Pre-allocate bulk stress
-    Tension_Int = Vector{Float64}(); Curvature_Int = Vector{Float64}(); Index_Int = Vector{Float64}(); 
-    Filament_Speed_Int = Vector{Float64}(); Motor_Speed_Int = Vector{Float64}(); Angle_ROC_Int = Vector{Float64}(); # Pre-allocate time-integrated variables
+    Tension_Int = Vector{Float64}(); Curvature_Int = Vector{Float64}(); Index_Int = Vector{Float64}(); Filament_Speed_Int = Vector{Float64}(); 
+    Motor_Speed_Int = Vector{Float64}(); Angle_ROC_Int = Vector{Float64}(); Motor_Pos_Int = Vector{Float64}(); Motor_Angle_Int = Vector{Float64}(); # Pre-allocate time-integrated variables
     times = (0:parN.nT-1).*parN.dt; # Vector of times at which we obtain measurements
     for i = 1:parN.nT
         Stress = [ Force[i][1]/parN.lxx Force[i][2]/parN.lyy ; Force[i][3]/parN.lxx Force[i][4]/parN.lyy];
@@ -169,6 +169,8 @@ function draw_stress_spatial(parN, Force, time_step, Curvature, Index, Filament_
         push!(Filament_Speed_Int, trapz(Filament_Speed, times)); # Integrate filament node speed over time
         push!(Motor_Speed_Int, trapz(Motor_Speed, times)); # Integrate motor head speed over time
         push!(Angle_ROC_Int, trapz(Angle_ROC, times)); # Integrate motor head speed over time
+        push!(Motor_Pos_Int, trapz(Motor_Pos, times)); # Integrate motor head position over time
+        push!(Motor_Angle_Int, trapz(Motor_Angle, times)); # Integrate motor angle over time
     end
     Tension_Moving = movingaverage(Bulk_Stress[1:time_step], 100);
     plot(times[1:time_step], Bulk_Stress[1:time_step], linewidth = 2, label = "Bulk Stress", xlabel = L"$t$", ylabel = "Bulk Stress (pN/μm)", legend=:topleft);
@@ -178,7 +180,9 @@ function draw_stress_spatial(parN, Force, time_step, Curvature, Index, Filament_
     # plot!(times[1:time_step], Index[1:time_step]*maximum(abs.(Bulk_Stress))/maximum(abs.(Filament_Speed)), linewidth = 2, label = "Filament Speed");
     # plot!(times[1:time_step], Index[1:time_step]*maximum(abs.(Bulk_Stress))/maximum(abs.(Motor_Speed)), linewidth = 2, label = "Motor Speed");
     # plot!(times[1:time_step], Index[1:time_step]*maximum(abs.(Bulk_Stress))/maximum(abs.(Angle_ROC)), linewidth = 2, label = "Rate of Change of Angle");
-    return Curvature_Int, Index_Int, Filament_Speed_Int, Motor_Speed_Int, Angle_ROC_Int
+    # plot!(times[1:time_step], Index[1:time_step]*maximum(abs.(Bulk_Stress))/maximum(abs.(Motor_Pos_Int)), linewidth = 2, label = "Motor Head Position");
+    # plot!(times[1:time_step], Index[1:time_step]*maximum(abs.(Bulk_Stress))/maximum(abs.(Motor_Angle_Int)), linewidth = 2, label = "Motor Angle");
+    return Curvature_Int, Index_Int, Filament_Speed_Int, Motor_Speed_Int, Angle_ROC_Int, Motor_Pos_Int, Motor_Angle_Int
 end
 
 "Integrate vector data using the trapezoidal rule"
