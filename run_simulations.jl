@@ -47,7 +47,7 @@ function run_simulations()
         motor_angle = Vector{Float64}(); # Pre-allocate time-averaged motor angle
         for j = 1:nTrials
             # Specify parameters
-            parN = Numerical_Parameters(); # Initialise struct of numerical parameters
+            parN = Numerical_Parameters(nT = 11); # Initialise struct of numerical parameters
             parA = Actin_Properties(k_off = par); # Initialise struct of actin filament properties
             parM = Myosin_Properties(); # Initialise struct of myosin motor properties
 

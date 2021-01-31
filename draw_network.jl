@@ -4,6 +4,7 @@
 "Draw the network configuration"
 function draw_network(s, af, xl, mm, parN, parA, Force, Lxx, Lxy, Lyx, Lyy)
     gr(); plot(); # Load GR plotting back-end and clear previous plots
+    default(titlefont = (18, "times"), guidefont = (26, "times"), tickfont = (18, "times"))
     # Actin Filaments
     fx = zeros(Float64, parA.nSeg+1, length(af));
     fy = zeros(Float64, parA.nSeg+1, length(af)); # Pre-allocate un-translated filament node positions
@@ -103,20 +104,23 @@ end
 
 "Plot force components"
 function draw_force(parN, Force, time_step)
-    cfxx = Vector{Float64}(); # Pre-allocate vector for force component (x)
-    cfxy = Vector{Float64}(); # Pre-allocate vector for force component (y)
-    cfyx = Vector{Float64}(); # Pre-allocate vector for force component (y)
-    cfyy = Vector{Float64}(); # Pre-allocate vector for force component (
-    cfxx_tot = Vector{Float64}(); # Pre-allocate vector for force component (x)
-    cfxy_tot = Vector{Float64}(); # Pre-allocate vector for force component (y)
-    cfyx_tot = Vector{Float64}(); # Pre-allocate vector for force component (x)
-    cfyy_tot = Vector{Float64}(); # Pre-allocate vector for force component (x)
+    gr(); plot(); # Load GR plotting back-end and clear previous plots
+    default(titlefont = (18, "times"), guidefont = (26, "times"), tickfont = (18, "times"))
+    # Pre-allocate
+    cfxx = Vector{Float64}(); # Pre-allocate vector for force component (xx)
+    cfxy = Vector{Float64}(); # Pre-allocate vector for force component (xy)
+    cfyx = Vector{Float64}(); # Pre-allocate vector for force component (yx)
+    cfyy = Vector{Float64}(); # Pre-allocate vector for force component (yy)
+    cfxx_tot = Vector{Float64}(); # Pre-allocate vector for force component (xx)
+    cfxy_tot = Vector{Float64}(); # Pre-allocate vector for force component (xy)
+    cfyx_tot = Vector{Float64}(); # Pre-allocate vector for force component (yx)
+    cfyy_tot = Vector{Float64}(); # Pre-allocate vector for force component (yy)
     times = (0:time_step-1).*parN.dt; # Vector of times at which we obtain measurements
     for i = 1:time_step
-        push!(cfxx, Force[i][1]); # Construct vector for force component (x)
-        push!(cfxy, Force[i][2]); # Construct vector for force component (y)
-        push!(cfyx, Force[i][3]); # Construct vector for force component (y)
-        push!(cfyy, Force[i][4]); # Construct vector for force component (y)
+        push!(cfxx, Force[i][1]); # Construct vector for force component (xx)
+        push!(cfxy, Force[i][2]); # Construct vector for force component (xy)
+        push!(cfyx, Force[i][3]); # Construct vector for force component (yx)
+        push!(cfyy, Force[i][4]); # Construct vector for force component (yy)
         push!(cfxx_tot, trapz(cfxx, times)); # Integrate force over time
         push!(cfxy_tot, trapz(cfxy, times)); # Integrate force over time
         push!(cfyx_tot, trapz(cfyx, times)); # Integrate force over time
@@ -141,6 +145,8 @@ end
 
 "Plot bulk stress and moving average"
 function draw_stress(parN, Force, time_step)
+    gr(); plot(); # Load GR plotting back-end and clear previous plots
+    default(titlefont = (18, "times"), guidefont = (26, "times"), tickfont = (18, "times"))
     Bulk_Stress = Vector{Float64}(); Bulk_Stress_Int = Vector{Float64}(); # Pre-allocate
     times = (0:parN.nT-1).*parN.dt; # Vector of times at which we obtain measurements
     for i = 1:parN.nT
@@ -156,6 +162,8 @@ end
 
 "Plot bulk stress against spatial measures"
 function draw_stress_spatial(parN, Force, time_step, Curvature, Index, Filament_Speed, Motor_Speed, Angle_ROC, Motor_Pos, Motor_Angle)
+    gr(); plot(); # Load GR plotting back-end and clear previous plots
+    default(titlefont = (18, "times"), guidefont = (26, "times"), tickfont = (18, "times"))
     Bulk_Stress = Vector{Float64}(); # Pre-allocate bulk stress
     Tension_Int = Vector{Float64}(); Curvature_Int = Vector{Float64}(); Index_Int = Vector{Float64}(); Filament_Speed_Int = Vector{Float64}(); 
     Motor_Speed_Int = Vector{Float64}(); Angle_ROC_Int = Vector{Float64}(); Motor_Pos_Int = Vector{Float64}(); Motor_Angle_Int = Vector{Float64}(); # Pre-allocate time-integrated variables
