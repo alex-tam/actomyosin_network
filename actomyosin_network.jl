@@ -15,6 +15,7 @@ function actomyosin_network(parN, parA, parM, par, trial)
     Angle_ROC = [0.0 for idx in 1:parN.nT]; # [rad/s] Mean rate of change of angle
     Motor_Pos = [0.0 for idx in 1:parN.nT]; # [--] Mean myosin motor head position
     Motor_Angle = [0.0 for idx in 1:parN.nT]; # [rad] Mean angle between filaments at motor binding site
+    Bins = Vector{Float64}(); Hist = Vector{Int}(); # [μm, --] Pre-allocate paired-distance histogram
     # Generate initial conditions
     state = State{Float64}(Vector{Vector{Vector}}(), Vector{Vector}()); # Initialise empty State struct
     mm = Vector{Myosin_Motor}(); # Pre-allocate empty myosin motors
@@ -38,7 +39,7 @@ function actomyosin_network(parN, parA, parM, par, trial)
         # savefig("actomyosin_curvature-$par-trial-$trial.svg"); # Save histogram of filament mean curvature
         Index[i] = two_filament_index(mm, state, parN, Lxx, Lxy, Lyx, Lyy); # Compute mean two-filament index at current time step
         # savefig("actomyosin_2f_index-$par-trial-$trial.svg"); # Save histogram of two-filament index
-        pcf(af, state, Lxx, Lyy); # Compute paired distances between filament nodes
+        Bins, Hist = pcf(af, state, Lxx, Lyy); # Compute paired distances between filament nodes
         savefig("actomyosin_pcf-$par-trial-$trial.svg"); # Save plot of pair-correlation function
         Filament_Speed[i] = filament_speed(parN, af, state, state_old, Lxx, Lxy, Lyx, Lyy);
         # savefig("actomyosin_filament_speed-$par-trial-$trial.svg"); # Save histogram of filament node speeds
@@ -91,5 +92,5 @@ function actomyosin_network(parN, parA, parM, par, trial)
     writedlm("motor_speed-par-$par-trial-$trial.csv", Motor_Speed);
     writedlm("motor_pos-par-$par-trial-$trial.csv", Motor_Pos);
     writedlm("motor_angle-par-$par-trial-$trial.csv", Motor_Angle);
-    return state, af, mm, xl, Bulk_Stress_Int[end]/times[end], Curvature_Int[end]/times[end], Index_Int[end]/times[end], Filament_Speed_Int[end]/times[end], Motor_Speed_Int[end]/times[end], Angle_ROC_Int[end]/times[end], Motor_Pos_Int[end]/times[end], Motor_Angle_Int[end]/times[end]
+    return state, af, mm, xl, Bulk_Stress_Int[end]/times[end], Curvature_Int[end]/times[end], Index_Int[end]/times[end], Filament_Speed_Int[end]/times[end], Motor_Speed_Int[end]/times[end], Angle_ROC_Int[end]/times[end], Motor_Pos_Int[end]/times[end], Motor_Angle_Int[end]/times[end], Bins, Hist
 end

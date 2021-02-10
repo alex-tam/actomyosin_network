@@ -61,7 +61,7 @@ function two_filament_index(mm, s, parN, Lxx, Lxy, Lyx, Lyy)
         theta = acos( (vec1[1]*vec2[1] + vec1[2]*vec2[2])/( sqrt(vec1[1]^2 + vec1[2]^2)*sqrt(vec2[1]^2 + vec2[2]^2) ) ); # Angle between vectors
         # Compute index
         if all(s.mp[i] .<=1)
-            Id = ( 2*(L1*s.mp[i][1] + L2*s.mp[i][2])/(L1+L2) - 1)*(1-cos(theta/2)); # Heuristic index based on four filament branches
+            Id = ( 2*(L1*s.mp[i][1] + L2*s.mp[i][2])/(L1+L2) - 1)*(1-cos(theta/2)^2); # Heuristic index based on four filament branches
         else
             Id = 0; # Return zero if motor is detached
         end
@@ -208,5 +208,31 @@ function pcf(af, s, Lxx, Lyy)
             end
         end
     end
-    histogram(distances)
+    # Generate normalised histogram
+    nBins = 50;
+    BinWidth = sqrt(Lxx^2 + Lyy^2)/nBins;
+    Bins = Vector{Float64}(undef, nBins);
+    Hist = Vector{Int}(undef, nBins); # Pre-allocate histogram
+    for i = 1:nBins
+        count::Int = 0;
+        for d in distances
+            if (d >= (i-1)*BinWidth) && (d < i*BinWidth)
+                count += 1;
+            end
+        end
+        Hist[i] = count;
+        Bins[i] = i*BinWidth;
+    end
+    gr(); plot(); # Load GR plotting back-end and clear previous plots
+    default(guidefont = (18, "times"), tickfont = (12, "times"))
+    bar(Bins, Hist/(sum(Hist)*BinWidth), label=:false, left_margin = 5mm, bottom_margin = 5mm, xlabel = L"d", ylabel = L"P(d)")
+    x1::Vector{Float64} = 0.0:0.001:1;
+    x2::Vector{Float64} = 1.0:(sqrt(2)-1)/1000:sqrt(2);
+    p1 = 2*x1.*(x1.^2 .- 4*x1 .+ pi);
+    p2 = 2*x2.*(4*sqrt.(x2.^2 .- 1) - (x2.^2 .+ 2 .- pi) - 4*atan.(sqrt.(x2.^2 .- 1)));
+    plot!(2.5*x1, p1/2.5, linewidth=2, color = "black", label=:false);
+    plot!(2.5*x2, p2/2.5, linewidth=2, color = "black", label=:false);
+    default(titlefont = (18, "times"), guidefont = (26, "times"), tickfont = (18, "times"))
+    return Bins, Hist
+    # histogram(distances)
 end

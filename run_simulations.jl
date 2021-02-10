@@ -7,6 +7,7 @@ using Parameters # Tools for storing parameters in data structures
 using LinearAlgebra # Matrix and vector operations
 using StatsBase # Sampling without replacement
 using Plots # Plotting library
+using Plots.PlotMeasures # Enable re-sizing plot margins
 using LaTeXStrings # Display LaTeX output
 using ForwardDiff # Automatic differentiation tools
 using Optim # Optimisation routines
@@ -34,7 +35,7 @@ include("energy.jl")
 
 function run_simulations()
     par_ref = 0.04;
-    nTrials = 10;
+    nTrials = 1;
     for i = 1:length(par_ref)
         par = par_ref[i]; # Select parameter
         bulk_stress = Vector{Float64}(); # Pre-allocate time-averaged bulk stress
@@ -52,7 +53,7 @@ function run_simulations()
             parM = Myosin_Properties(); # Initialise struct of myosin motor properties
 
             # Run simulations
-            @time state, af, mm, xl, Bulk_Stress, Curvature, Index, Filament_Speed, Motor_Speed, Angle_ROC, Motor_Pos, Motor_Angle = actomyosin_network(parN, parA, parM, i, j);
+            @time state, af, mm, xl, Bulk_Stress, Curvature, Index, Filament_Speed, Motor_Speed, Angle_ROC, Motor_Pos, Motor_Angle, Bins, Hist = actomyosin_network(parN, parA, parM, i, j);
             push!(bulk_stress, Bulk_Stress); # Store time-averaged net stress
             push!(curvature, Curvature); # Store time-averaged integrated curvature
             push!(index, Index); # Store time-averaged two-filament index
@@ -69,6 +70,8 @@ function run_simulations()
             writedlm("angle_roc-$par.txt", angle_roc); # Write time-averaged angle rate of change to file
             writedlm("motor_pos-$par.txt", motor_pos); # Write time-averaged motor position to file
             writedlm("motor_angle-$par.txt", motor_angle); # Write time-averaged motor angle to file
+            writedlm("pd_end_bins-par-$i-trial-$j.txt", Bins); # Write paried-distances bins to file
+            writedlm("pd_end_counts-par-$i-trial-$j.txt", Hist); # Write paired-distances counts to file
         end
     end
 end
