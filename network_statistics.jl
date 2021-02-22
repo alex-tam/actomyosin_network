@@ -197,7 +197,7 @@ function pcf(af, s, Lxx, Lyy)
                             for t1y in test
                                 for t2x in test
                                     for t2y in test
-                                        push!(dist_candidates, sqrt( (n1x-n2x-t1x*Lxx+t2x*Lxx)^2 + (n1y-n2y-t1y*Lyy+t2y*Lyy)^2 ));
+                                        push!(dist_candidates, sqrt( (n1x - n2x - t1x*Lxx + t2x*Lxx)^2 + (n1y - n2y - t1y*Lyy + t2y*Lyy)^2 ));
                                     end
                                 end
                             end
