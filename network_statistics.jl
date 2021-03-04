@@ -58,7 +58,15 @@ function two_filament_index(mm, s, parN, Lxx, Lxy, Lyx, Lyy)
         # Calculate angle between vectors
         vec1 = [px1 - mx1, py1 - my1]; # Vector between motor and plus end of filament 1
         vec2 = [px2 - mx2, py2 - my2]; # Vector between motor and plus end of filament 2
-        theta = acos( (vec1[1]*vec2[1] + vec1[2]*vec2[2])/( sqrt(vec1[1]^2 + vec1[2]^2)*sqrt(vec2[1]^2 + vec2[2]^2) ) ); # Angle between vectors
+        cosine = (vec1[1]*vec2[1] + vec1[2]*vec2[2])/( sqrt(vec1[1]^2 + vec1[2]^2)*sqrt(vec2[1]^2 + vec2[2]^2)); # Cosine of angle between vectors
+        # Prevent spurious errors that occur in rare instances
+        if abs(cosine) <= 1
+            theta = acos(cosine); # Angle between vectors
+        elseif cosine > 1
+            theta = acos(1); # Angle between vectors
+        else
+            theta = acos(-1); # Angle between vectors
+        end
         # Compute index
         if all(s.mp[i] .<=1)
             Id = ( 2*(L1*s.mp[i][1] + L2*s.mp[i][2])/(L1+L2) - 1)*(1-cos(theta/2)^2); # Heuristic index based on four filament branches
@@ -125,7 +133,15 @@ function motor_angle_roc(parN, mm, s, s_old, Lxx, Lxy, Lyx, Lyy)
         # Calculate angle between vectors
         vec1 = [px1 - mx1, py1 - my1]; # Vector between motor and plus end of filament 1
         vec2 = [px2 - mx2, py2 - my2]; # Vector between motor and plus end of filament 2
-        theta = acos( (vec1[1]*vec2[1] + vec1[2]*vec2[2])/( sqrt(vec1[1]^2 + vec1[2]^2)*sqrt(vec2[1]^2 + vec2[2]^2) ) ); # Angle between vectors
+        cosine = (vec1[1]*vec2[1] + vec1[2]*vec2[2])/( sqrt(vec1[1]^2 + vec1[2]^2)*sqrt(vec2[1]^2 + vec2[2]^2)); # Cosine of angle between vectors
+        # Prevent spurious errors that occur in rare instances
+        if abs(cosine) <= 1
+            theta = acos(cosine); # Angle between vectors
+        elseif cosine > 1
+            theta = acos(1); # Angle between vectors
+        else
+            theta = acos(-1); # Angle between vectors
+        end
         # Find segments on which motor attaches
         seg1, seg2, r1, r2 = get_motor_relative_pos_segment(m, s_old, Lxx, Lxy, Lyx, Lyy);
         # Calculate segment positions
@@ -134,7 +150,15 @@ function motor_angle_roc(parN, mm, s, s_old, Lxx, Lxy, Lyx, Lyy)
         # Calculate angle between vectors
         vec1 = [px1 - mx1, py1 - my1]; # Vector between motor and plus end of filament 1
         vec2 = [px2 - mx2, py2 - my2]; # Vector between motor and plus end of filament 2
-        theta_old = acos( (vec1[1]*vec2[1] + vec1[2]*vec2[2])/( sqrt(vec1[1]^2 + vec1[2]^2)*sqrt(vec2[1]^2 + vec2[2]^2) ) ); # Angle between vectors
+        cosine = (vec1[1]*vec2[1] + vec1[2]*vec2[2])/( sqrt(vec1[1]^2 + vec1[2]^2)*sqrt(vec2[1]^2 + vec2[2]^2)); # Cosine of angle between vectors
+        # Prevent spurious errors that occur in rare instances
+        if abs(cosine) <= 1
+            theta_old = acos(cosine); # Angle between vectors
+        elseif cosine > 1
+            theta_old = acos(1); # Angle between vectors
+        else
+            theta_old = acos(-1); # Angle between vectors
+        end
         # 2. Calculate rate of change of angle
         rate = (theta - theta_old)/(parN.dt);
         push!(motor_angle_roc, rate);
@@ -169,7 +193,15 @@ function motor_angle(mm, s, parN, Lxx, Lxy, Lyx, Lyy)
         # Calculate angle between vectors
         vec1 = [px1 - mx1, py1 - my1]; # Vector between motor and plus end of filament 1
         vec2 = [px2 - mx2, py2 - my2]; # Vector between motor and plus end of filament 2
-        theta = acos( (vec1[1]*vec2[1] + vec1[2]*vec2[2])/( sqrt(vec1[1]^2 + vec1[2]^2)*sqrt(vec2[1]^2 + vec2[2]^2) ) ); # Angle between vectors
+        cosine = (vec1[1]*vec2[1] + vec1[2]*vec2[2])/( sqrt(vec1[1]^2 + vec1[2]^2)*sqrt(vec2[1]^2 + vec2[2]^2)); # Cosine of angle between vectors
+        # Prevent spurious errors that occur in rare instances
+        if abs(cosine) <= 1
+            theta = acos(cosine); # Angle between vectors
+        elseif cosine > 1
+            theta = acos(1); # Angle between vectors
+        else
+            theta = acos(-1); # Angle between vectors
+        end
         push!(motor_angle, theta);
     end
     # histogram(motor_angle)
