@@ -35,7 +35,7 @@ function curvature(af, s, Lxx, Lxy, Lyx, Lyy)
 end
 
 "Two-filament index"
-function two_filament_index(mm, s, parN, Lxx, Lxy, Lyx, Lyy)
+function two_filament_index(mm, s, Lxx, Lxy, Lyx, Lyy)
     index = Vector{Float64}(); # Pre-allocate index data
     # Loop over motors
     for i = 1:length(mm)
@@ -46,15 +46,15 @@ function two_filament_index(mm, s, parN, Lxx, Lxy, Lyx, Lyy)
         L2 = sum(get_segment_lengths(m.f2, s, Lxx, Lxy, Lyx, Lyy));
         # Calculate motor positions
         x1, y1, x2, y2 = get_motor_pos(m, s, Lxx, Lxy, Lyx, Lyy);
-        m1x = (x1 - m.t1[1]*Lxx/parN.lxx - m.t1[2]*Lyx/parN.lxx)*Lxx + (y1 - m.t1[1]*Lxy/parN.lyy - m.t1[2]*Lyy/parN.lyy)*Lyx;
-        m1y = (y1 - m.t1[1]*Lxy/parN.lyy - m.t1[2]*Lyy/parN.lyy)*Lyy + (x1 - m.t1[1]*Lxx/parN.lxx - m.t1[2]*Lyx/parN.lxx)*Lxy;
-        m2x = (x2 - m.t2[1]*Lxx/parN.lxx - m.t2[2]*Lyx/parN.lxx)*Lxx + (y2 - m.t2[1]*Lxy/parN.lyy - m.t2[2]*Lyy/parN.lyy)*Lyx;
-        m2y = (y2 - m.t2[1]*Lxy/parN.lyy - m.t2[2]*Lyy/parN.lyy)*Lyy + (x2 - m.t2[1]*Lxx/parN.lxx - m.t2[2]*Lyx/parN.lxx)*Lxy;       
+        m1x = (x1 - m.t1[1])*Lxx + (y1 - m.t1[2])*Lyx;
+        m1y = (x1 - m.t1[1])*Lxy + (y1 - m.t1[2])*Lyy;
+        m2x = (x2 - m.t2[1])*Lxx + (y2 - m.t2[2])*Lyx;
+        m2y = (x2 - m.t2[1])*Lxy + (y2 - m.t2[2])*Lyy;     
         # Find segments on which motor attaches
         seg1, seg2, r1, r2 = get_motor_relative_pos_segment(m, s, Lxx, Lxy, Lyx, Lyy);
         # Calculate segment positions
-        mx1, my1, px1, py1 = get_segment_nodes(f1, f1.segments[seg1], s, m.t1, parN, Lxx, Lxy, Lyx, Lyy);
-        mx2, my2, px2, py2 = get_segment_nodes(f2, f2.segments[seg2], s, m.t2, parN, Lxx, Lxy, Lyx, Lyy);
+        mx1, my1, px1, py1 = get_segment_nodes(f1, f1.segments[seg1], s, m.t1, Lxx, Lxy, Lyx, Lyy);
+        mx2, my2, px2, py2 = get_segment_nodes(f2, f2.segments[seg2], s, m.t2, Lxx, Lxy, Lyx, Lyy);
         # Calculate angle between vectors
         vec1 = [px1 - mx1, py1 - my1]; # Vector between motor and plus end of filament 1
         vec2 = [px2 - mx2, py2 - my2]; # Vector between motor and plus end of filament 2
@@ -89,7 +89,7 @@ function filament_speed(parN, af, s, s_old, Lxx, Lxy, Lyx, Lyy)
             # Extract physical node position (new)
             xn = s.an[f.index][i][1]*Lxx + s.an[f.index][i][2]*Lyx;
             yn = s.an[f.index][i][1]*Lxy + s.an[f.index][i][2]*Lyy;
-            # Extract physical node position (old). s_old can be used because it's computed after turnover
+            # Extract physical node position (old)
             xo = s_old.an[f.index][i][1]*Lxx + s_old.an[f.index][i][2]*Lyx;
             yo = s_old.an[f.index][i][1]*Lxy + s_old.an[f.index][i][2]*Lyy;
             # Calculate speed
@@ -128,8 +128,8 @@ function motor_angle_roc(parN, mm, s, s_old, Lxx, Lxy, Lyx, Lyy)
         # Find segments on which motor attaches
         seg1, seg2, r1, r2 = get_motor_relative_pos_segment(m, s, Lxx, Lxy, Lyx, Lyy);
         # Calculate segment positions
-        mx1, my1, px1, py1 = get_segment_nodes(f1, f1.segments[seg1], s, m.t1, parN, Lxx, Lxy, Lyx, Lyy);
-        mx2, my2, px2, py2 = get_segment_nodes(f2, f2.segments[seg2], s, m.t2, parN, Lxx, Lxy, Lyx, Lyy);
+        mx1, my1, px1, py1 = get_segment_nodes(f1, f1.segments[seg1], s, m.t1, Lxx, Lxy, Lyx, Lyy);
+        mx2, my2, px2, py2 = get_segment_nodes(f2, f2.segments[seg2], s, m.t2, Lxx, Lxy, Lyx, Lyy);
         # Calculate angle between vectors
         vec1 = [px1 - mx1, py1 - my1]; # Vector between motor and plus end of filament 1
         vec2 = [px2 - mx2, py2 - my2]; # Vector between motor and plus end of filament 2
@@ -145,8 +145,8 @@ function motor_angle_roc(parN, mm, s, s_old, Lxx, Lxy, Lyx, Lyy)
         # Find segments on which motor attaches
         seg1, seg2, r1, r2 = get_motor_relative_pos_segment(m, s_old, Lxx, Lxy, Lyx, Lyy);
         # Calculate segment positions
-        mx1, my1, px1, py1 = get_segment_nodes(f1, f1.segments[seg1], s_old, m.t1, parN, Lxx, Lxy, Lyx, Lyy);
-        mx2, my2, px2, py2 = get_segment_nodes(f2, f2.segments[seg2], s_old, m.t2, parN, Lxx, Lxy, Lyx, Lyy);
+        mx1, my1, px1, py1 = get_segment_nodes(f1, f1.segments[seg1], s_old, m.t1, Lxx, Lxy, Lyx, Lyy);
+        mx2, my2, px2, py2 = get_segment_nodes(f2, f2.segments[seg2], s_old, m.t2, Lxx, Lxy, Lyx, Lyy);
         # Calculate angle between vectors
         vec1 = [px1 - mx1, py1 - my1]; # Vector between motor and plus end of filament 1
         vec2 = [px2 - mx2, py2 - my2]; # Vector between motor and plus end of filament 2
@@ -188,8 +188,8 @@ function motor_angle(mm, s, parN, Lxx, Lxy, Lyx, Lyy)
         # Find segments on which motor attaches
         seg1, seg2, r1, r2 = get_motor_relative_pos_segment(m, s, Lxx, Lxy, Lyx, Lyy);
         # Calculate segment positions
-        mx1, my1, px1, py1 = get_segment_nodes(f1, f1.segments[seg1], s, m.t1, parN, Lxx, Lxy, Lyx, Lyy);
-        mx2, my2, px2, py2 = get_segment_nodes(f2, f2.segments[seg2], s, m.t2, parN, Lxx, Lxy, Lyx, Lyy);
+        mx1, my1, px1, py1 = get_segment_nodes(f1, f1.segments[seg1], s, m.t1, Lxx, Lxy, Lyx, Lyy);
+        mx2, my2, px2, py2 = get_segment_nodes(f2, f2.segments[seg2], s, m.t2, Lxx, Lxy, Lyx, Lyy);
         # Calculate angle between vectors
         vec1 = [px1 - mx1, py1 - my1]; # Vector between motor and plus end of filament 1
         vec2 = [px2 - mx2, py2 - my2]; # Vector between motor and plus end of filament 2

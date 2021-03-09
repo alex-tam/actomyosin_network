@@ -14,7 +14,7 @@ function energy_functional(x::Vector{T}, s_old::State{Float64}, af, xl, mm, parN
         energy += energy_cross_link(l, s, parN, parA, Lxx, Lxy, Lyx, Lyy)
     end
     for m in mm
-        energy += energy_myosin_spring(m, s, parN, parM, Lxx, Lxy, Lyx, Lyy);
+        energy += energy_myosin_spring(m, s, parM, Lxx, Lxy, Lyx, Lyy);
         energy += energy_myosin_actin(m, s, s_old, parN, parM, Lxx, Lxy, Lyx, Lyy);
     end
     return energy
@@ -37,8 +37,7 @@ function energy_actin_drag(f::Actin_Filament, s::State{T}, s_old::State{Float64}
     # Apply drag at nodes, scaled by segment lengths
     for i = 1:length(s.an[f.index]) # Loop over nodes
         pnx = s.an[f.index][i][1]; pny = s.an[f.index][i][2]; # Current dimensionless node positions
-        pox = (s_old.an[f.index][i][1])*(Lxx/parN.lxx) + (s_old.an[f.index][i][2])*(Lyx/parN.lxx); # Old dimensionless node position in new co-ordinates (x)
-        poy = (s_old.an[f.index][i][1])*(Lxy/parN.lyy) + (s_old.an[f.index][i][2])*(Lyy/parN.lyy); # Old dimensionless node position in new co-ordinates (y)
+        pox = s_old.an[f.index][i][1]; poy = s_old.an[f.index][i][2]; # Old dimensionless node positions
         # Obtain average length of segments adjacent to node
         if (i == 1)
             avl = seg_lengths[i]/2; # Minus end
@@ -84,25 +83,25 @@ function energy_cross_link(l::Cross_Link, s::State{T}, parN, parA, Lxx, Lxy, Lyx
     # Extract cross-linker position (dimensionless, un-translated)
     x1, y1, x2, y2 = get_xl_pos(l, s); 
     # Convert to dimensional, translated positions
-    lx1 = (x1 - l.t1[1]*Lxx/parN.lxx - l.t1[2]*Lyx/parN.lxx)*Lxx + (y1 - l.t1[1]*Lxy/parN.lyy - l.t1[2]*Lyy/parN.lyy)*Lyx;
-    ly1 = (y1 - l.t1[1]*Lxy/parN.lyy - l.t1[2]*Lyy/parN.lyy)*Lyy + (x1 - l.t1[1]*Lxx/parN.lxx - l.t1[2]*Lyx/parN.lxx)*Lxy;
-    lx2 = (x2 - l.t2[1]*Lxx/parN.lxx - l.t2[2]*Lyx/parN.lxx)*Lxx + (y2 - l.t2[1]*Lxy/parN.lyy - l.t2[2]*Lyy/parN.lyy)*Lyx;
-    ly2 = (y2 - l.t2[1]*Lxy/parN.lyy - l.t2[2]*Lyy/parN.lyy)*Lyy + (x2 - l.t2[1]*Lxx/parN.lxx - l.t2[2]*Lyx/parN.lxx)*Lxy;
+    lx1 = (x1 - l.t1[1])*Lxx + (y1 - l.t1[2])*Lyx;
+    ly1 = (x1 - l.t1[1])*Lxy + (y1 - l.t1[2])*Lyy;
+    lx2 = (x2 - l.t2[1])*Lxx + (y2 - l.t2[2])*Lyx;
+    ly2 = (x2 - l.t2[1])*Lxy + (y2 - l.t2[2])*Lyy;
     # Energy
     energy += parA.lambda_pf*((lx1 - lx2)^2 + (ly1 - ly2)^2)/(2*parN.dt); # Cross-linker drag energy
     return energy
 end
 
 "Energy contribution of myosin spring forces"
-function energy_myosin_spring(m::Myosin_Motor, s::State{T}, parN, parM, Lxx, Lxy, Lyx, Lyy) where {T}
+function energy_myosin_spring(m::Myosin_Motor, s::State{T}, parM, Lxx, Lxy, Lyx, Lyy) where {T}
     energy = zero(T);
     # Extract motor binding sites (dimensionless, un-translated)
     x1, y1, x2, y2 = get_motor_pos(m, s, Lxx, Lxy, Lyx, Lyy); 
     # Convert to dimensional, translated positions
-    mx1 = (x1 - m.t1[1]*Lxx/parN.lxx - m.t1[2]*Lyx/parN.lxx)*Lxx + (y1 - m.t1[1]*Lxy/parN.lyy - m.t1[2]*Lyy/parN.lyy)*Lyx;
-    my1 = (y1 - m.t1[1]*Lxy/parN.lyy - m.t1[2]*Lyy/parN.lyy)*Lyy + (x1 - m.t1[1]*Lxx/parN.lxx - m.t1[2]*Lyx/parN.lxx)*Lxy;
-    mx2 = (x2 - m.t2[1]*Lxx/parN.lxx - m.t2[2]*Lyx/parN.lxx)*Lxx + (y2 - m.t2[1]*Lxy/parN.lyy - m.t2[2]*Lyy/parN.lyy)*Lyx;
-    my2 = (y2 - m.t2[1]*Lxy/parN.lyy - m.t2[2]*Lyy/parN.lyy)*Lyy + (x2 - m.t2[1]*Lxx/parN.lxx - m.t2[2]*Lyx/parN.lxx)*Lxy;
+    mx1 = (x1 - m.t1[1])*Lxx + (y1 - m.t1[2])*Lyx;
+    my1 = (x1 - m.t1[1])*Lxy + (y1 - m.t1[2])*Lyy;
+    mx2 = (x2 - m.t2[1])*Lxx + (y2 - m.t2[2])*Lyx;
+    my2 = (x2 - m.t2[1])*Lxy + (y2 - m.t2[2])*Lyy;
     # Energy contribution
     energy += 0.5*parM.k*((mx1 - mx2)^2 + (my1 - my2)^2); # Myosin spring energy
     return energy

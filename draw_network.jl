@@ -17,11 +17,11 @@ function draw_network(s, af, xl, mm, parN, parA, Force, Lxx, Lxy, Lyx, Lyy)
         for seg in f.segments
             for j = 1:length(seg.t)
                 if j == 1
-                    mx, my, px, py = get_segment_nodes(f, seg, s, seg.t[j], parN, Lxx, Lxy, Lyx, Lyy); # Get segment nodes
+                    mx, my, px, py = get_segment_nodes(f, seg, s, seg.t[j], Lxx, Lxy, Lyx, Lyy); # Get segment nodes
                     push!(nx, mx); push!(nx, px); # Store unprojected nodes of a segment (x)
                     push!(ny, my); push!(ny, py); # Store unprojected nodes of a segment (y)
                 else
-                    mx, my, px, py = get_segment_nodes(f, seg, s, seg.t[j], parN, Lxx, Lxy, Lyx, Lyy); # Get segment nodes
+                    mx, my, px, py = get_segment_nodes(f, seg, s, seg.t[j], Lxx, Lxy, Lyx, Lyy); # Get segment nodes
                     if seg.index == length(f.segments)
                         push!(p1x, mx); push!(p2x, px); push!(p1y, my); push!(p2y, py); # Store nodes (plus-end)
                     else
@@ -48,10 +48,10 @@ function draw_network(s, af, xl, mm, parN, parA, Force, Lxx, Lxy, Lyx, Lyy)
         # Obtain cross-link positions (dimensionless, un-translated)
         x1, y1, x2, y2 = get_xl_pos(l, s);
         # Convert to dimensional, translated positions
-        lx1 = (x1 - l.t1[1]*Lxx/parN.lxx - l.t1[2]*Lyx/parN.lxx)*Lxx + (y1 - l.t1[1]*Lxy/parN.lyy - l.t1[2]*Lyy/parN.lyy)*Lyx;
-        ly1 = (y1 - l.t1[1]*Lxy/parN.lyy - l.t1[2]*Lyy/parN.lyy)*Lyy + (x1 - l.t1[1]*Lxx/parN.lxx - l.t1[2]*Lyx/parN.lxx)*Lxy;
-        lx2 = (x2 - l.t2[1]*Lxx/parN.lxx - l.t2[2]*Lyx/parN.lxx)*Lxx + (y2 - l.t2[1]*Lxy/parN.lyy - l.t2[2]*Lyy/parN.lyy)*Lyx;
-        ly2 = (y2 - l.t2[1]*Lxy/parN.lyy - l.t2[2]*Lyy/parN.lyy)*Lyy + (x2 - l.t2[1]*Lxx/parN.lxx - l.t2[2]*Lyx/parN.lxx)*Lxy;
+        lx1 = (x1 - l.t1[1])*Lxx + (y1 - l.t1[2])*Lyx;
+        ly1 = (x1 - l.t1[1])*Lxy + (y1 - l.t1[2])*Lyy;
+        lx2 = (x2 - l.t2[1])*Lxx + (y2 - l.t2[2])*Lyx;
+        ly2 = (x2 - l.t2[1])*Lxy + (y2 - l.t2[2])*Lyy;
         push!(l1x, lx1); push!(l1y, ly1); push!(l2x, lx2); push!(l2y, ly2);
     end
     scatter!([l1x, l2x], [l1y, l2y], color = "pink") # Plot cross-link sites as points
@@ -64,10 +64,10 @@ function draw_network(s, af, xl, mm, parN, parA, Force, Lxx, Lxy, Lyx, Lyy)
     for m in mm
         x1, y1, x2, y2 = get_motor_pos(m, s, Lxx, Lxy, Lyx, Lyy); # Obtain motor positions (dimensionless, un-translated)
         # Convert to dimensional, translated positions
-        mx1 = (x1 - m.t1[1]*Lxx/parN.lxx - m.t1[2]*Lyx/parN.lxx)*Lxx + (y1 - m.t1[1]*Lxy/parN.lyy - m.t1[2]*Lyy/parN.lyy)*Lyx;
-        my1 = (y1 - m.t1[1]*Lxy/parN.lyy - m.t1[2]*Lyy/parN.lyy)*Lyy + (x1 - m.t1[1]*Lxx/parN.lxx - m.t1[2]*Lyx/parN.lxx)*Lxy;
-        mx2 = (x2 - m.t2[1]*Lxx/parN.lxx - m.t2[2]*Lyx/parN.lxx)*Lxx + (y2 - m.t2[1]*Lxy/parN.lyy - m.t2[2]*Lyy/parN.lyy)*Lyx;
-        my2 = (y2 - m.t2[1]*Lxy/parN.lyy - m.t2[2]*Lyy/parN.lyy)*Lyy + (x2 - m.t2[1]*Lxx/parN.lxx - m.t2[2]*Lyx/parN.lxx)*Lxy;
+        mx1 = (x1 - m.t1[1])*Lxx + (y1 - m.t1[2])*Lyx;
+        my1 = (x1 - m.t1[1])*Lxy + (y1 - m.t1[2])*Lyy;
+        mx2 = (x2 - m.t2[1])*Lxx + (y2 - m.t2[2])*Lyx;
+        my2 = (x2 - m.t2[1])*Lxy + (y2 - m.t2[2])*Lyy;
         # Compute translations for visualisation only
         myosin_translations = periodic([mx1/parN.lxx, my1/parN.lyy], [mx2/parN.lxx, my2/parN.lyy]);
         for j = 1:length(myosin_translations)
@@ -87,19 +87,19 @@ function draw_network(s, af, xl, mm, parN, parA, Force, Lxx, Lxy, Lyx, Lyy)
     scatter!([tm1x, tm2x], [tm1y, tm2y], color = "orange"); # Plot binding sites as points
     plot!(transpose(hcat(m1x, m2x)), transpose(hcat(m1y, m2y)), color = "blue") # Draw motors
     plot!(transpose(hcat(tm1x, tm2x)), transpose(hcat(tm1y, tm2y)), color = "orange") # Draw projected motors
-    # # Principal stress directions
-    # Stress = [ Force[1]/parN.lxx Force[2]/parN.lyy ; Force[3]/parN.lxx Force[4]/parN.lyy ]; # Compute stress tensor
-    # evals = eigvals(Stress); evecs = eigvecs(Stress); # Compute eigenvalues and eigenvectors
-    # if evals[1] >= 0
-    #     plot!([parN.lxx/2, parN.lxx/2 + evals[1]*evecs[1,1]], [parN.lyy/2 , parN.lyy/2 + evals[1]*evecs[1,2]], arrow = :arrow, color = "orange")
-    # else
-    #     plot!([parN.lxx/2, parN.lxx/2 + abs(evals[1])*evecs[1,1]], [parN.lyy/2 , parN.lyy/2 + abs(evals[1])*evecs[1,2]], arrow = :arrow, color = "blue")
-    # end
-    # if evals[2] >= 0
-    #     plot!([parN.lxx/2, parN.lxx/2 + evals[2]*evecs[2,1]], [parN.lyy/2 , parN.lyy/2 + evals[2]*evecs[2,2]], arrow = :arrow, color = "orange")
-    # else
-    #     plot!([parN.lxx/2, parN.lxx/2 + abs(evals[2])*evecs[2,1]], [parN.lyy/2 , parN.lyy/2 + abs(evals[2])*evecs[2,2]], arrow = :arrow, color = "blue")
-    # end
+    # Principal stress directions
+    Stress = [ Force[1]/Lyy Force[3]/Lxx ; Force[2]/Lyy Force[4]/Lxx ]; # Compute stress tensor
+    evals = eigvals(Stress); evecs = eigvecs(Stress); # Compute eigenvalues and eigenvectors
+    if evals[1] >= 0
+        plot!([parN.lxx/2, parN.lxx/2 + evals[1]*evecs[1,1]], [parN.lyy/2 , parN.lyy/2 + evals[1]*evecs[1,2]], arrow = :arrow, color = "orange")
+    else
+        plot!([parN.lxx/2, parN.lxx/2 + abs(evals[1])*evecs[1,1]], [parN.lyy/2 , parN.lyy/2 + abs(evals[1])*evecs[1,2]], arrow = :arrow, color = "blue")
+    end
+    if evals[2] >= 0
+        plot!([parN.lxx/2, parN.lxx/2 + evals[2]*evecs[2,1]], [parN.lyy/2 , parN.lyy/2 + evals[2]*evecs[2,2]], arrow = :arrow, color = "orange")
+    else
+        plot!([parN.lxx/2, parN.lxx/2 + abs(evals[2])*evecs[2,1]], [parN.lyy/2 , parN.lyy/2 + abs(evals[2])*evecs[2,2]], arrow = :arrow, color = "blue")
+    end
 end
 
 "Plot force components"
@@ -144,13 +144,13 @@ function draw_force(parN, Force, time_step)
 end
 
 "Plot bulk stress and moving average"
-function draw_stress(parN, Force, time_step)
+function draw_bulk_stress(parN, Force, time_step, Lxx, Lyy)
     gr(); plot(); # Load GR plotting back-end and clear previous plots
     default(titlefont = (18, "times"), guidefont = (26, "times"), tickfont = (18, "times"))
     Bulk_Stress = Vector{Float64}(); Bulk_Stress_Int = Vector{Float64}(); # Pre-allocate
     times = (0:parN.nT-1).*parN.dt; # Vector of times at which we obtain measurements
     for i = 1:parN.nT
-        Stress = [ Force[i][1]/parN.lxx Force[i][2]/parN.lyy ; Force[i][3]/parN.lxx Force[i][4]/parN.lyy];
+        Stress = [ Force[i][1]/Lyy Force[i][3]/Lxx ; Force[i][2]/Lyy Force[i][4]/Lxx ]; # Compute stress tensor
         push!(Bulk_Stress, sum(eigvals(Stress))/2);
         push!(Bulk_Stress_Int, trapz(Bulk_Stress, times)); # Integrate bulk stress over time
     end
@@ -161,7 +161,7 @@ function draw_stress(parN, Force, time_step)
 end
 
 "Plot bulk stress against spatial measures"
-function draw_stress_spatial(parN, Force, time_step, Curvature, Index, Filament_Speed, Motor_Speed, Angle_ROC, Motor_Pos, Motor_Angle)
+function draw_stress_spatial(parN, Force, time_step, Curvature, Index, Filament_Speed, Motor_Speed, Angle_ROC, Motor_Pos, Motor_Angle, Lxx, Lyy)
     gr(); plot(); # Load GR plotting back-end and clear previous plots
     default(titlefont = (18, "times"), guidefont = (26, "times"), tickfont = (18, "times"))
     Bulk_Stress = Vector{Float64}(); # Pre-allocate bulk stress
@@ -169,7 +169,7 @@ function draw_stress_spatial(parN, Force, time_step, Curvature, Index, Filament_
     Motor_Speed_Int = Vector{Float64}(); Angle_ROC_Int = Vector{Float64}(); Motor_Pos_Int = Vector{Float64}(); Motor_Angle_Int = Vector{Float64}(); # Pre-allocate time-integrated variables
     times = (0:parN.nT-1).*parN.dt; # Vector of times at which we obtain measurements
     for i = 1:parN.nT
-        Stress = [ Force[i][1]/parN.lxx Force[i][2]/parN.lyy ; Force[i][3]/parN.lxx Force[i][4]/parN.lyy];
+        Stress = [ Force[i][1]/Lyy Force[i][3]/Lxx ; Force[i][2]/Lyy Force[i][4]/Lxx ]; # Compute stress tensor
         push!(Bulk_Stress, sum(eigvals(Stress))/2);
         push!(Tension_Int, trapz(Bulk_Stress, times)); # Integrate force over time
         push!(Curvature_Int, trapz(Curvature, times)); # Integrate curvature over time

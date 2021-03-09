@@ -37,7 +37,7 @@ function actomyosin_network(parN, parA, parM, par, trial)
             Curvature[i] = 0;
         end
         # savefig("actomyosin_curvature-$par-trial-$trial.svg"); # Save histogram of filament mean curvature
-        Index[i] = two_filament_index(mm, state, parN, Lxx, Lxy, Lyx, Lyy); # Compute mean two-filament index at current time step
+        Index[i] = two_filament_index(mm, state, Lxx, Lxy, Lyx, Lyy); # Compute mean two-filament index at current time step
         # savefig("actomyosin_2f_index-$par-trial-$trial.svg"); # Save histogram of two-filament index
         Bins, Hist = pcf(af, state, Lxx, Lyy); # Compute paired distances between filament nodes
         savefig("actomyosin_pcf-$par-trial-$trial.svg"); # Save plot of pair-correlation function
@@ -77,11 +77,11 @@ function actomyosin_network(parN, parA, parM, par, trial)
     draw_force(parN, Force, parN.nT);
     savefig("actomyosin_force-par-$par-trial-$trial.svg");
     # Plot bulk stress versus time
-    times, Bulk_Stress, Bulk_Stress_Int = draw_stress(parN, Force, parN.nT);
+    times, Bulk_Stress, Bulk_Stress_Int = draw_bulk_stress(parN, Force, parN.nT, Lxx, Lyy);
     @printf("Time-averaged net stress is %f pN/μm*s.\n", Bulk_Stress_Int[end]/times[end])
     savefig("actomyosin_stress-par-$par-trial-$trial.svg");
     # Plot bulk stress with network statistics versus time
-    Curvature_Int, Index_Int, Filament_Speed_Int, Motor_Speed_Int, Angle_ROC_Int, Motor_Pos_Int, Motor_Angle_Int = draw_stress_spatial(parN, Force, parN.nT, Curvature, Index, Filament_Speed, Motor_Speed, Angle_ROC, Motor_Pos, Motor_Angle)
+    Curvature_Int, Index_Int, Filament_Speed_Int, Motor_Speed_Int, Angle_ROC_Int, Motor_Pos_Int, Motor_Angle_Int = draw_stress_spatial(parN, Force, parN.nT, Curvature, Index, Filament_Speed, Motor_Speed, Angle_ROC, Motor_Pos, Motor_Angle, Lxx, Lyy)
     savefig("actomyosin_stress_spatial-par-$par-trial-$trial.svg");
     # Save mean stress and spatial measures time series data to a file
     writedlm("times.csv", times);
