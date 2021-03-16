@@ -34,19 +34,19 @@ end
 function energy_actin_drag(f::Actin_Filament, s::State{T}, s_old::State{Float64}, parN, parA, Lxx, Lxy, Lyx, Lyy) where {T}
     energy = zero(T); # Pre-allocate energy
     seg_lengths = get_segment_lengths(f, s, Lxx, Lxy, Lyx, Lyy); # Dimensional
-    # Apply drag at nodes, scaled by segment lengths
-    for i = 1:length(s.an[f.index]) # Loop over nodes
-        pnx = s.an[f.index][i][1]; pny = s.an[f.index][i][2]; # Current dimensionless node positions
-        pox = s_old.an[f.index][i][1]; poy = s_old.an[f.index][i][2]; # Old dimensionless node positions
-        # Obtain average length of segments adjacent to node
-        if (i == 1)
-            avl = seg_lengths[i]/2; # Minus end
-        elseif (i == length(s.an[f.index]))
-            avl = seg_lengths[end]/2; # Plus end
-        else
-            avl = (seg_lengths[i-1] + seg_lengths[i])/2; # Interior nodes
+    # Distribute drag along segments
+    nPoints = 5; # Number of data points to sample per segment
+    for i = 1:(length(s.an[f.index])-1) # Loop over segments
+        for j = 1:nPoints
+            # Extract data points
+            pnx = s.an[f.index][i][1] + (j-0.5)/nPoints*(s.an[f.index][i+1][1]-s.an[f.index][i][1]);
+            pny = s.an[f.index][i][2] + (j-0.5)/nPoints*(s.an[f.index][i+1][2]-s.an[f.index][i][2]); # Current dimensionless node positions
+            pox = s_old.an[f.index][i][1] + (j-0.5)/nPoints*(s_old.an[f.index][i+1][1]-s_old.an[f.index][i][1]);
+            poy = s_old.an[f.index][i][2] + (j-0.5)/nPoints*(s_old.an[f.index][i+1][2]-s_old.an[f.index][i][2]); # Old dimensionless node positions
+            # Add energy contirbution
+            avl = seg_lengths[i]/nPoints;
+            energy += parA.lambda_a*avl*( ((pnx-pox)*Lxx + (pny-poy)*Lyx)^2 + ((pnx-pox)*Lxy + (pny-poy)*Lyy)^2 )/(2*parN.dt);
         end
-        energy += parA.lambda_a*avl*( ((pnx-pox)*Lxx + (pny-poy)*Lyx)^2 + ((pnx-pox)*Lxy + (pny-poy)*Lyy)^2 )/(2*parN.dt); # Add scaled contribution to overall drag
     end
     return energy
 end
