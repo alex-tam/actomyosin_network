@@ -69,10 +69,10 @@ function energy_actin_bending(f::Actin_Filament, s::State{T}, parA, Lxx, Lxy, Ly
         # Compute numerical second derivatives
         L01 = seg_lengths[i]; L12 = seg_lengths[i+1]; # Extract segment lengths
         avl = (L01 + L12)/2; # Average length
-        ddfx = (xp-xc)/L12 - (xc-xm)/L01; # Numerical second derivative (x)
-        ddfy = (yp-yc)/L12 - (yc-ym)/L01; # Numerical second derivative (y)
+        ddfx = ((xp-xc)/L12 - (xc-xm)/L01)/avl; # Numerical second derivative (x)
+        ddfy = ((yp-yc)/L12 - (yc-ym)/L01)/avl; # Numerical second derivative (y)
         # Add contribution to energy
-        energy += 0.5*parA.kappa*(ddfx^2 + ddfy^2)/avl; # Actin bending energy
+        energy += 0.5*parA.kappa*avl*(ddfx^2 + ddfy^2); # Actin bending energy
     end
     return energy
 end

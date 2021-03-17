@@ -88,7 +88,7 @@ function draw_network(s, af, xl, mm, parN, parA, Force, Lxx, Lxy, Lyx, Lyy)
     plot!(transpose(hcat(m1x, m2x)), transpose(hcat(m1y, m2y)), color = "blue") # Draw motors
     plot!(transpose(hcat(tm1x, tm2x)), transpose(hcat(tm1y, tm2y)), color = "orange") # Draw projected motors
     # Principal stress directions
-    Stress = [ Force[1]/Lyy Force[3]/Lxx ; Force[2]/Lyy Force[4]/Lxx ]; # Compute stress tensor
+    Stress = [ Force[1]/Lyy Force[2]/Lyy ; Force[3]/Lxx Force[4]/Lxx ]; # Compute stress tensor
     evals = eigvals(Stress); evecs = eigvecs(Stress); # Compute eigenvalues and eigenvectors
     if evals[1] >= 0
         plot!([parN.lxx/2, parN.lxx/2 + evals[1]*evecs[1,1]], [parN.lyy/2 , parN.lyy/2 + evals[1]*evecs[1,2]], arrow = :arrow, color = "orange")
@@ -150,7 +150,7 @@ function draw_bulk_stress(parN, Force, time_step, Lxx, Lyy)
     Bulk_Stress = Vector{Float64}(); Bulk_Stress_Int = Vector{Float64}(); # Pre-allocate
     times = (0:parN.nT-1).*parN.dt; # Vector of times at which we obtain measurements
     for i = 1:parN.nT
-        Stress = [ Force[i][1]/Lyy Force[i][3]/Lxx ; Force[i][2]/Lyy Force[i][4]/Lxx ]; # Compute stress tensor
+        Stress = [ Force[i][1]/Lyy Force[i][2]/Lyy ; Force[i][3]/Lxx Force[i][4]/Lxx ]; # Compute stress tensor
         push!(Bulk_Stress, sum(eigvals(Stress))/2);
         push!(Bulk_Stress_Int, trapz(Bulk_Stress, times)); # Integrate bulk stress over time
     end
@@ -169,7 +169,7 @@ function draw_stress_spatial(parN, Force, time_step, Curvature, Index, Filament_
     Motor_Speed_Int = Vector{Float64}(); Angle_ROC_Int = Vector{Float64}(); Motor_Pos_Int = Vector{Float64}(); Motor_Angle_Int = Vector{Float64}(); # Pre-allocate time-integrated variables
     times = (0:parN.nT-1).*parN.dt; # Vector of times at which we obtain measurements
     for i = 1:parN.nT
-        Stress = [ Force[i][1]/Lyy Force[i][3]/Lxx ; Force[i][2]/Lyy Force[i][4]/Lxx ]; # Compute stress tensor
+        Stress = [ Force[i][1]/Lyy Force[i][2]/Lyy ; Force[i][3]/Lxx Force[i][4]/Lxx ]; # Compute stress tensor
         push!(Bulk_Stress, sum(eigvals(Stress))/2);
         push!(Tension_Int, trapz(Bulk_Stress, times)); # Integrate force over time
         push!(Curvature_Int, trapz(Curvature, times)); # Integrate curvature over time
