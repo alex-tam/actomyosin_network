@@ -102,44 +102,44 @@ function draw_network(s, af, xl, mm, parN, parA, Force, Lxx, Lxy, Lyx, Lyy)
     end
 end
 
-"Plot force components"
-function draw_force(parN, Force, time_step)
+"Plot stress components"
+function draw_stress(parN, Force, time_step, Lxx, Lyy)
     gr(); plot(); # Load GR plotting back-end and clear previous plots
     default(titlefont = (18, "times"), guidefont = (26, "times"), tickfont = (18, "times"))
     # Pre-allocate
-    cfxx = Vector{Float64}(); # Pre-allocate vector for force component (xx)
-    cfxy = Vector{Float64}(); # Pre-allocate vector for force component (xy)
-    cfyx = Vector{Float64}(); # Pre-allocate vector for force component (yx)
-    cfyy = Vector{Float64}(); # Pre-allocate vector for force component (yy)
-    cfxx_tot = Vector{Float64}(); # Pre-allocate vector for force component (xx)
-    cfxy_tot = Vector{Float64}(); # Pre-allocate vector for force component (xy)
-    cfyx_tot = Vector{Float64}(); # Pre-allocate vector for force component (yx)
-    cfyy_tot = Vector{Float64}(); # Pre-allocate vector for force component (yy)
+    sxx = Vector{Float64}(); # Pre-allocate vector for stress component (xx)
+    sxy = Vector{Float64}(); # Pre-allocate vector for stress component (xy)
+    syx = Vector{Float64}(); # Pre-allocate vector for stress component (yx)
+    syy = Vector{Float64}(); # Pre-allocate vector for stress component (yy)
+    sxx_tot = Vector{Float64}(); # Pre-allocate vector for stress component (xx)
+    sxy_tot = Vector{Float64}(); # Pre-allocate vector for stress component (xy)
+    syx_tot = Vector{Float64}(); # Pre-allocate vector for stress component (yx)
+    syy_tot = Vector{Float64}(); # Pre-allocate vector for stress component (yy)
     times = (0:time_step-1).*parN.dt; # Vector of times at which we obtain measurements
     for i = 1:time_step
-        push!(cfxx, Force[i][1]); # Construct vector for force component (xx)
-        push!(cfxy, Force[i][2]); # Construct vector for force component (xy)
-        push!(cfyx, Force[i][3]); # Construct vector for force component (yx)
-        push!(cfyy, Force[i][4]); # Construct vector for force component (yy)
-        push!(cfxx_tot, trapz(cfxx, times)); # Integrate force over time
-        push!(cfxy_tot, trapz(cfxy, times)); # Integrate force over time
-        push!(cfyx_tot, trapz(cfyx, times)); # Integrate force over time
-        push!(cfyy_tot, trapz(cfyy, times)); # Integrate force over time
+        push!(sxx, Force[i][1]/Lyy); # Construct vector for stress component (xx)
+        push!(sxy, Force[i][2]/Lyy); # Construct vector for stress component (xy)
+        push!(syx, Force[i][3]/Lxx); # Construct vector for stress component (yx)
+        push!(syy, Force[i][4]/Lxx); # Construct vector for stress component (yy)
+        push!(sxx_tot, trapz(sxx, times)); # Integrate stress over time
+        push!(sxy_tot, trapz(sxy, times)); # Integrate stress over time
+        push!(syx_tot, trapz(syx, times)); # Integrate stress over time
+        push!(syy_tot, trapz(syy, times)); # Integrate stress over time
     end
-    # Plot network force
-    p1 = plot(times, cfxx, color = "orange", linewidth = 2, label=:false, xlabel = L"$t$", ylabel = "Force (pN)", legend=:bottomleft, size = (1000, 500));
-    plot!(times, cfxy, color = "purple", linewidth = 2, label=:false);
-    plot!(times, cfyx, color = "green", linewidth = 2, label=:false);
-    plot!(times, cfyy, color = "blue", linewidth = 2, label=:false);
-    plot!(times, movingaverage(cfxx, 100), color = "orange", linewidth = 2, linestyle = :dash, label = L"F_{xx}");
-    plot!(times, movingaverage(cfxy, 100), color = "purple", linewidth = 2, linestyle = :dash, label = L"F_{xy}");
-    plot!(times, movingaverage(cfyx, 100), color = "green", linewidth = 2, linestyle = :dash, label = L"F_{yx}");
-    plot!(times, movingaverage(cfyy, 100), color = "blue", linewidth = 2, linestyle = :dash, label = L"F_{yy}");
-    # Plot integrated force
-    p2 = plot(times, cfxx_tot, color = "orange", linewidth=2, label = L"\int F_{xx} \; dt", xlabel = L"$t$", ylabel = "Integrated Force (pNs)", legend=:bottomleft, size = (1000, 500));
-    plot!(times, cfxy_tot, color = "purple", linewidth=2, label = L"\int F_{xy} \;dt");
-    plot!(times, cfyx_tot, color = "green", linewidth=2, label = L"\int F_{yx} \;dt");
-    plot!(times, cfyy_tot, color = "blue", linewidth=2, label = L"\int F_{yy} \;dt");
+    # Plot stress
+    p1 = plot(times, sxx, color = "orange", linewidth = 2, label=:false, xlabel = L"$t$", ylabel = "Stress (pN/μm)", legend=:bottomleft, size = (1000, 500));
+    plot!(times, sxy, color = "purple", linewidth = 2, label=:false);
+    plot!(times, syx, color = "green", linewidth = 2, label=:false);
+    plot!(times, syy, color = "blue", linewidth = 2, label=:false);
+    plot!(times, movingaverage(sxx, 100), color = "orange", linewidth = 2, linestyle = :dash, label = L"\sigma_{xx}");
+    plot!(times, movingaverage(sxy, 100), color = "purple", linewidth = 2, linestyle = :dash, label = L"\sigma_{xy}");
+    plot!(times, movingaverage(syx, 100), color = "green", linewidth = 2, linestyle = :dash, label = L"\sigma_{yx}");
+    plot!(times, movingaverage(syy, 100), color = "blue", linewidth = 2, linestyle = :dash, label = L"\sigma_{yy}");
+    # Plot integrated stress
+    p2 = plot(times, sxx_tot, color = "orange", linewidth=2, label = L"\int \sigma_{xx} \; dt", xlabel = L"$t$", ylabel = "Integrated Stree (pNs/μm)", legend=:bottomleft, size = (1000, 500));
+    plot!(times, sxy_tot, color = "purple", linewidth=2, label = L"\int \sigma_{xy} \;dt");
+    plot!(times, syx_tot, color = "green", linewidth=2, label = L"\int \sigma_{yx} \;dt");
+    plot!(times, syy_tot, color = "blue", linewidth=2, label = L"\int \sigma_{yy} \;dt");
     plot(p1, p2, layout = (1,2))
 end
 
@@ -158,39 +158,6 @@ function draw_bulk_stress(parN, Force, time_step, Lxx, Lyy)
     plot(times[1:time_step], Bulk_Stress[1:time_step], linewidth = 2, label = "Bulk Stress", xlabel = L"$t$", ylabel = "Bulk Stress (pN/μm)", legend=:topleft);
     plot!(times[1:time_step], Bulk_Stress_Moving[1:time_step], linewidth = 2, linestyle = :dot, label = "Moving Average");
     return times, Bulk_Stress, Bulk_Stress_Int
-end
-
-"Plot bulk stress against spatial measures"
-function draw_stress_spatial(parN, Force, time_step, Curvature, Index, Filament_Speed, Motor_Speed, Angle_ROC, Motor_Pos, Motor_Angle, Lxx, Lyy)
-    gr(); plot(); # Load GR plotting back-end and clear previous plots
-    default(titlefont = (18, "times"), guidefont = (26, "times"), tickfont = (18, "times"))
-    Bulk_Stress = Vector{Float64}(); # Pre-allocate bulk stress
-    Tension_Int = Vector{Float64}(); Curvature_Int = Vector{Float64}(); Index_Int = Vector{Float64}(); Filament_Speed_Int = Vector{Float64}(); 
-    Motor_Speed_Int = Vector{Float64}(); Angle_ROC_Int = Vector{Float64}(); Motor_Pos_Int = Vector{Float64}(); Motor_Angle_Int = Vector{Float64}(); # Pre-allocate time-integrated variables
-    times = (0:parN.nT-1).*parN.dt; # Vector of times at which we obtain measurements
-    for i = 1:parN.nT
-        Stress = [ Force[i][1]/Lyy Force[i][2]/Lyy ; Force[i][3]/Lxx Force[i][4]/Lxx ]; # Compute stress tensor
-        push!(Bulk_Stress, sum(eigvals(Stress))/2);
-        push!(Tension_Int, trapz(Bulk_Stress, times)); # Integrate force over time
-        push!(Curvature_Int, trapz(Curvature, times)); # Integrate curvature over time
-        push!(Index_Int, trapz(Index, times)); # Integrate two-filament index over time
-        push!(Filament_Speed_Int, trapz(Filament_Speed, times)); # Integrate filament node speed over time
-        push!(Motor_Speed_Int, trapz(Motor_Speed, times)); # Integrate motor head speed over time
-        push!(Angle_ROC_Int, trapz(Angle_ROC, times)); # Integrate motor head speed over time
-        push!(Motor_Pos_Int, trapz(Motor_Pos, times)); # Integrate motor head position over time
-        push!(Motor_Angle_Int, trapz(Motor_Angle, times)); # Integrate motor angle over time
-    end
-    Tension_Moving = movingaverage(Bulk_Stress[1:time_step], 100);
-    plot(times[1:time_step], Bulk_Stress[1:time_step], linewidth = 2, label = "Bulk Stress", xlabel = L"$t$", ylabel = "Bulk Stress (pN/μm)", legend=:topleft);
-    plot!(times[1:time_step], Tension_Moving[1:time_step], linewidth = 2, linestyle = :dot, label = "Moving Average");
-    # plot!(times[1:time_step], Curvature[1:time_step]*maximum(abs.(Bulk_Stress))/maximum(Curvature), linewidth = 2, label = "Curvature");
-    plot!(times[1:time_step], Index[1:time_step]*maximum(abs.(Bulk_Stress))/maximum(abs.(Index)), linewidth = 2, label = "Two-Filament Index");
-    # plot!(times[1:time_step], Index[1:time_step]*maximum(abs.(Bulk_Stress))/maximum(abs.(Filament_Speed)), linewidth = 2, label = "Filament Speed");
-    # plot!(times[1:time_step], Index[1:time_step]*maximum(abs.(Bulk_Stress))/maximum(abs.(Motor_Speed)), linewidth = 2, label = "Motor Speed");
-    # plot!(times[1:time_step], Index[1:time_step]*maximum(abs.(Bulk_Stress))/maximum(abs.(Angle_ROC)), linewidth = 2, label = "Rate of Change of Angle");
-    # plot!(times[1:time_step], Index[1:time_step]*maximum(abs.(Bulk_Stress))/maximum(abs.(Motor_Pos_Int)), linewidth = 2, label = "Motor Head Position");
-    # plot!(times[1:time_step], Index[1:time_step]*maximum(abs.(Bulk_Stress))/maximum(abs.(Motor_Angle_Int)), linewidth = 2, label = "Motor Angle");
-    return Curvature_Int, Index_Int, Filament_Speed_Int, Motor_Speed_Int, Angle_ROC_Int, Motor_Pos_Int, Motor_Angle_Int
 end
 
 "Integrate vector data using the trapezoidal rule"

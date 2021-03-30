@@ -71,19 +71,14 @@ function actomyosin_network(parN, parA, parM, par, trial)
         end
     end
     # Output .gif and image of the network
-    gif(animation, "actomyosin-par-$par-trial-$trial.gif", fps = 10)
-    savefig("actomyosin_end-par-$par-trial-$trial.svg");
-    # Draw force components
-    draw_force(parN, Force, parN.nT);
-    savefig("actomyosin_force-par-$par-trial-$trial.svg");
-    # Plot bulk stress versus time
-    times, Bulk_Stress, Bulk_Stress_Int = draw_bulk_stress(parN, Force, parN.nT, Lxx, Lyy);
-    @printf("Time-averaged net stress is %f pN/μm*s.\n", Bulk_Stress_Int[end]/times[end])
-    savefig("actomyosin_stress-par-$par-trial-$trial.svg");
-    # Plot bulk stress with network statistics versus time
-    Curvature_Int, Index_Int, Filament_Speed_Int, Motor_Speed_Int, Angle_ROC_Int, Motor_Pos_Int, Motor_Angle_Int = draw_stress_spatial(parN, Force, parN.nT, Curvature, Index, Filament_Speed, Motor_Speed, Angle_ROC, Motor_Pos, Motor_Angle, Lxx, Lyy)
-    savefig("actomyosin_stress_spatial-par-$par-trial-$trial.svg");
-    # Save mean stress and spatial measures time series data to a file
+    gif(animation, "actomyosin-par-$par-trial-$trial.gif", fps = 10); savefig("actomyosin_end-par-$par-trial-$trial.svg");
+    # Plot quantities versus time
+    draw_stress(parN, Force, parN.nT, Lxx, Lyy); savefig("actomyosin_stress-par-$par-trial-$trial.svg"); # Stress components
+    times, Bulk_Stress, Bulk_Stress_Int = draw_bulk_stress(parN, Force, parN.nT, Lxx, Lyy); savefig("actomyosin_bulk_stress-par-$par-trial-$trial.svg"); # Bulk stress
+    @printf("Time-averaged bulk stress is %f pN/μm*s.\n", Bulk_Stress_Int[end]/times[end])
+    # Compute time-integrated network statistics
+    Curvature_Int, Index_Int, Filament_Speed_Int, Motor_Speed_Int, Angle_ROC_Int, Motor_Pos_Int, Motor_Angle_Int = integrated_statistics(parN, Curvature, Index, Filament_Speed, Motor_Speed, Angle_ROC, Motor_Pos, Motor_Angle)
+    # Save mean stress and spatial measures time series data to files
     writedlm("times.csv", times);
     writedlm("stress-par-$par-trial-$trial.csv", Bulk_Stress);
     writedlm("curvature-par-$par-trial-$trial.csv", Curvature);

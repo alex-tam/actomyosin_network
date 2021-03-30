@@ -268,3 +268,20 @@ function pcf(af, s, Lxx, Lyy)
     return Bins, Hist
     # histogram(distances)
 end
+
+"Compute integrated network statistics"
+function integrated_statistics(parN, Curvature, Index, Filament_Speed, Motor_Speed, Angle_ROC, Motor_Pos, Motor_Angle)
+    Curvature_Int = Vector{Float64}(); Index_Int = Vector{Float64}(); Filament_Speed_Int = Vector{Float64}(); 
+    Motor_Speed_Int = Vector{Float64}(); Angle_ROC_Int = Vector{Float64}(); Motor_Pos_Int = Vector{Float64}(); Motor_Angle_Int = Vector{Float64}(); # Pre-allocate time-integrated variables
+    times = (0:parN.nT-1).*parN.dt; # Vector of times at which we obtain measurements
+    for i = 1:parN.nT
+        push!(Curvature_Int, trapz(Curvature, times)); # Integrate curvature over time
+        push!(Index_Int, trapz(Index, times)); # Integrate two-filament index over time
+        push!(Filament_Speed_Int, trapz(Filament_Speed, times)); # Integrate filament node speed over time
+        push!(Motor_Speed_Int, trapz(Motor_Speed, times)); # Integrate motor head speed over time
+        push!(Angle_ROC_Int, trapz(Angle_ROC, times)); # Integrate motor head speed over time
+        push!(Motor_Pos_Int, trapz(Motor_Pos, times)); # Integrate motor head position over time
+        push!(Motor_Angle_Int, trapz(Motor_Angle, times)); # Integrate motor angle over time
+    end
+    return Curvature_Int, Index_Int, Filament_Speed_Int, Motor_Speed_Int, Angle_ROC_Int, Motor_Pos_Int, Motor_Angle_Int
+end
