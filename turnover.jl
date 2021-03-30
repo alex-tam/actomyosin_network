@@ -13,7 +13,7 @@ function actin_turnover(s, af, mm, parN, parA, Lxx, Lyy)
             # Remove data from state and filament list
             deleteat!(s.an, j)
             deleteat!(af, j)
-            # Object indexing is fine here because motors list does not change
+            # Update motors
             for m in mm
                 # Mark motors for removal if filament turns over
                 if m.f1.index == j
@@ -31,7 +31,7 @@ function actin_turnover(s, af, mm, parN, parA, Lxx, Lyy)
                 end
             end
             # Update indices in actin filament list
-            for a=1:length(af)
+            for a = 1:length(af)
                 af[a].index = a;
             end
             j -= 1; # Ensure correct index for next filament
@@ -69,9 +69,9 @@ function myosin_turnover(s, xl, mm, parN, parM, Lxx, Lxy, Lyx, Lyy)
             # Generate replacement motor
             push!(mm, Myosin_Motor(s, xl[xl_index], j, Lxx, Lxy, Lyx, Lyy));
             deleteat!(xl, xl_index);
-            # Update motor indices if necessary
+            # Update order of motor indices
             for m = 1:N
-                mm[m].index = m; # Update order of indices
+                mm[m].index = m;
             end
             j -= 1; # Ensure correct index for next motor
         end
