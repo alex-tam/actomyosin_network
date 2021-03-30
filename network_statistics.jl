@@ -10,23 +10,25 @@ function curvature(af, s, Lxx, Lxy, Lyx, Lyy)
         seg_lengths = get_segment_lengths(f, s, Lxx, Lxy, Lyx, Lyy); # Dimensional segment lengths
         total_filament_curvature = 0.0; # Pre-allocate integrated curvature of current filament
         # Compute curvature at interior nodes
-        for i = 1:length(s.an[f.index])-2 
-            # Extract physical positions of plus node
-            xp = s.an[f.index][i+2][1]*Lxx + s.an[f.index][i+2][2]*Lyx;
-            yp = s.an[f.index][i+2][1]*Lxy + s.an[f.index][i+2][2]*Lyy;
-            # Extract physical positions of centre node
-            xc = s.an[f.index][i+1][1]*Lxx + s.an[f.index][i+1][2]*Lyx;
-            yc = s.an[f.index][i+1][1]*Lxy + s.an[f.index][i+1][2]*Lyy;
-            # Extract physical positions of minus node
-            xm = s.an[f.index][i][1]*Lxx + s.an[f.index][i][2]*Lyx;
-            ym = s.an[f.index][i][1]*Lxy + s.an[f.index][i][2]*Lyy;
-            # Compute numerical second derivatives
-            L01 = seg_lengths[i]; L12 = seg_lengths[i+1]; # Extract segment lengths
-            avl = (L01 + L12)/2; # Average length
-            ddfx = ((xp-xc)/L12 - (xc-xm)/L01)/avl; # Numerical second derivative (x)
-            ddfy = ((yp-yc)/L12 - (yc-ym)/L01)/avl; # Numerical second derivative (y)
-            # Add contribution to integrated curvature
-            total_filament_curvature += sqrt(ddfx^2 + ddfy^2)*avl;
+        if length(s.an[f.index]) >= 3
+            for i = 1:length(s.an[f.index])-2 
+                # Extract physical positions of plus node
+                xp = s.an[f.index][i+2][1]*Lxx + s.an[f.index][i+2][2]*Lyx;
+                yp = s.an[f.index][i+2][1]*Lxy + s.an[f.index][i+2][2]*Lyy;
+                # Extract physical positions of centre node
+                xc = s.an[f.index][i+1][1]*Lxx + s.an[f.index][i+1][2]*Lyx;
+                yc = s.an[f.index][i+1][1]*Lxy + s.an[f.index][i+1][2]*Lyy;
+                # Extract physical positions of minus node
+                xm = s.an[f.index][i][1]*Lxx + s.an[f.index][i][2]*Lyx;
+                ym = s.an[f.index][i][1]*Lxy + s.an[f.index][i][2]*Lyy;
+                # Compute numerical second derivatives
+                L01 = seg_lengths[i]; L12 = seg_lengths[i+1]; # Extract segment lengths
+                avl = (L01 + L12)/2; # Average length
+                ddfx = ((xp-xc)/L12 - (xc-xm)/L01)/avl; # Numerical second derivative (x)
+                ddfy = ((yp-yc)/L12 - (yc-ym)/L01)/avl; # Numerical second derivative (y)
+                # Add contribution to integrated curvature
+                total_filament_curvature += sqrt(ddfx^2 + ddfy^2)*avl;
+            end
         end
         push!(filament_curvatures, total_filament_curvature);
     end

@@ -25,34 +25,22 @@ function actomyosin_network(parN, parA, parM, par, trial)
     state_old = state; # Store initial state to compute force
     # Time-stepping
     animation = @animate for i = 1:parN.nT
-        # Write DOF vector to file
+        # Write final DOF vector to file
         if i == parN.nT
             dof = build_dof(state);
             writedlm("dof-$par-trial-$trial-$i.csv", dof);
         end
-        # Spatial statistics
-        if parA.nSeg > 1
-            Curvature[i] = curvature(af, state, Lxx, Lxy, Lyx, Lyy); # Compute curvature at current time step
-        else
-            Curvature[i] = 0;
-        end
-        # savefig("actomyosin_curvature-$par-trial-$trial.svg"); # Save histogram of filament mean curvature
-        Index[i] = two_filament_index(mm, state, Lxx, Lxy, Lyx, Lyy); # Compute mean two-filament index at current time step
-        # savefig("actomyosin_2f_index-$par-trial-$trial.svg"); # Save histogram of two-filament index
-        Bins, Hist = pcf(af, state, Lxx, Lyy); # Compute paired distances between filament nodes
-        savefig("actomyosin_pcf-$par-trial-$trial.svg"); # Save plot of pair-correlation function
-        Filament_Speed[i] = filament_speed(parN, af, state, state_old, Lxx, Lxy, Lyx, Lyy);
-        # savefig("actomyosin_filament_speed-$par-trial-$trial.svg"); # Save histogram of filament node speeds
-        Motor_Speed[i] = motor_speed(parN, mm, state, state_old, Lxx, Lxy, Lyx, Lyy);
-        # savefig("actomyosin_motor_speed-$par-trial-$trial.svg"); # Save histogram of motor head speeds
-        Angle_ROC[i] = motor_angle_roc(parN, mm, state, state_old, Lxx, Lxy, Lyx, Lyy);
-        # savefig("actomyosin_angle_roc-$par-trial-$trial.svg"); # Save histogram of angle rate of change
-        Motor_Pos[i] = motor_position(mm, state);
-        # savefig("actomyosin_angle_roc-$par-trial-$trial.svg"); # Save histogram of myosin motor head positions
-        Motor_Angle[i] = motor_angle(mm, state, parN, Lxx, Lxy, Lyx, Lyy);
-        # savefig("actomyosin_angle_roc-$par-trial-$trial.svg"); # Save histogram of myosin motor angles
-        # Compute force and draw network
-        Force[i] = network_force(state, state_old, af, xl, mm, parN, parA, parM, Lxx, Lxy, Lyx, Lyy);
+        # Compute network characteristics
+        Curvature[i] = curvature(af, state, Lxx, Lxy, Lyx, Lyy); # savefig("actomyosin_curvature-$par-trial-$trial.svg"); # Mean filament curvature
+        Index[i] = two_filament_index(mm, state, Lxx, Lxy, Lyx, Lyy); # savefig("actomyosin_2f_index-$par-trial-$trial.svg"); # Mean two-filament index
+        Bins, Hist = pcf(af, state, Lxx, Lyy); savefig("actomyosin_pcf-$par-trial-$trial.svg"); # Paired distances between filament nodes
+        Filament_Speed[i] = filament_speed(parN, af, state, state_old, Lxx, Lxy, Lyx, Lyy); # savefig("actomyosin_filament_speed-$par-trial-$trial.svg"); # Filament node speeds
+        Motor_Speed[i] = motor_speed(parN, mm, state, state_old, Lxx, Lxy, Lyx, Lyy); # savefig("actomyosin_motor_speed-$par-trial-$trial.svg"); # Motor head speeds
+        Angle_ROC[i] = motor_angle_roc(parN, mm, state, state_old, Lxx, Lxy, Lyx, Lyy); # savefig("actomyosin_angle_roc-$par-trial-$trial.svg"); # Angle rate of change
+        Motor_Pos[i] = motor_position(mm, state); # savefig("actomyosin_angle_roc-$par-trial-$trial.svg"); # Myosin motor head positions
+        Motor_Angle[i] = motor_angle(mm, state, parN, Lxx, Lxy, Lyx, Lyy); # savefig("actomyosin_angle_roc-$par-trial-$trial.svg"); # Myosin motor angles
+        Force[i] = network_force(state, state_old, af, xl, mm, parN, parA, parM, Lxx, Lxy, Lyx, Lyy); # Force
+        # Draw network
         draw_network(state, af, xl, mm, parN, parA, Force[i], Lxx, Lxy, Lyx, Lyy);
         if i == 1
             savefig("actomyosin_ic-par-$par-trial-$trial.svg"); # Save image of initial condition
