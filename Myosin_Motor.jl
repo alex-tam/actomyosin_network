@@ -27,36 +27,12 @@ function get_motor_relative_pos_filament(s::State, l::Cross_Link, Lxx, Lxy, Lyx,
     return mp
 end
 
-# "Convert relative position along filaments to relative position along segments"
-# function get_motor_relative_pos_segment(m::Myosin_Motor, s::State, Lxx, Lxy, Lyx, Lyy)
-#     # Compute dimensional segment lengths
-#     Ls1 = get_segment_lengths(m.f1, s, Lxx, Lxy, Lyx, Lyy); # Filament 1
-#     Ls2 = get_segment_lengths(m.f2, s, Lxx, Lxy, Lyx, Lyy); # Filament 2
-#     # Pre-allocate vectors
-#     seg = Vector{}(); relative_pos = Vector{}();
-#     # Compute relative positions
-#     for i = 1:length(m.f1.segments)
-#         if sum(Ls1[1:i])/sum(Ls1) >= s.mp[m.index][1]
-#             push!(seg, i);
-#             push!(relative_pos, 1 - (sum(Ls1[1:i]) - s.mp[m.index][1]*sum(Ls1))/Ls1[i] );
-#             break
-#         end
-#     end
-#     for i = 1:length(m.f2.segments)
-#         if sum(Ls2[1:i])/sum(Ls2) >= s.mp[m.index][2]
-#             push!(seg, i);
-#             push!(relative_pos, 1 - (sum(Ls2[1:i]) - s.mp[m.index][2]*sum(Ls2))/Ls2[i] );
-#             break
-#         end
-#     end
-#     return seg, relative_pos
-# end
-
+"Convert relative position along filaments to relative position along segments"
 function get_motor_relative_pos_segment(m::Myosin_Motor, s::State, Lxx, Lxy, Lyx, Lyy)
     # Steps 1-3 must be dimensional for non-square domains
     # 1. Calculate dimensional segment lengths
     seg_lengths_1 = get_segment_lengths(m.f1, s, Lxx, Lxy, Lyx, Lyy);
-    seg_lengths_2 = get_segment_lengths(m.f2, s,Lxx, Lxy, Lyx, Lyy);
+    seg_lengths_2 = get_segment_lengths(m.f2, s, Lxx, Lxy, Lyx, Lyy);
     # 2. Determine index of relevant segments
     cumulative_length_1 = cumsum(seg_lengths_1);
     cumulative_length_2 = cumsum(seg_lengths_2);
