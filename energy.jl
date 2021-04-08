@@ -23,9 +23,10 @@ end
 "Energy contribution of actin filament spring forces"
 function energy_actin_spring(f::Actin_Filament, s::State{T}, parA, Lxx, Lxy, Lyx, Lyy) where {T}
     energy = zero(T); # Pre-allocate energy
+    # Loop over segments
     for seg in f.segments
-        mx, my, px, py = get_segment_nodes(f, seg, s, Lxx, Lxy, Lyx, Lyy); # Physical, not translated
-        energy += 0.5*parA.k*(sqrt((px - mx)^2 + (py - my)^2) - seg.L_eq)^2; # Actin spring energy
+        Ls = get_segment_length(f, s, seg, Lxx, Lxy, Lyx, Lyy); # Physical, not translated
+        energy += 0.5*parA.k*(Ls - seg.L_eq)^2; # Actin spring energy
     end
     return energy
 end
@@ -33,10 +34,11 @@ end
 "Energy contribution of drag between actin filaments and the cytoplasm"
 function energy_actin_drag(f::Actin_Filament, s::State{T}, s_old::State{Float64}, parN, parA, Lxx, Lxy, Lyx, Lyy) where {T}
     energy = zero(T); # Pre-allocate energy
-    seg_lengths = get_segment_lengths(f, s, Lxx, Lxy, Lyx, Lyy); # Dimensional
     # Distribute drag along segments
     nPoints = 5; # Number of data points to sample per segment
     for i = 1:(length(s.an[f.index])-1) # Loop over segments
+        Ls = get_segment_length(f, s, f.segments[i], Lxx, Lxy, Lyx, Lyy);
+        avl = Ls/nPoints;
         for j = 1:nPoints
             # Extract data points
             pnx = s.an[f.index][i][1] + (j-0.5)/nPoints*(s.an[f.index][i+1][1]-s.an[f.index][i][1]);
@@ -44,7 +46,6 @@ function energy_actin_drag(f::Actin_Filament, s::State{T}, s_old::State{Float64}
             pox = s_old.an[f.index][i][1] + (j-0.5)/nPoints*(s_old.an[f.index][i+1][1]-s_old.an[f.index][i][1]);
             poy = s_old.an[f.index][i][2] + (j-0.5)/nPoints*(s_old.an[f.index][i+1][2]-s_old.an[f.index][i][2]); # Old dimensionless node positions
             # Add energy contirbution
-            avl = seg_lengths[i]/nPoints;
             energy += parA.lambda_a*avl*( ((pnx-pox)*Lxx + (pny-poy)*Lyx)^2 + ((pnx-pox)*Lxy + (pny-poy)*Lyy)^2 )/(2*parN.dt);
         end
     end
@@ -54,9 +55,8 @@ end
 "Energy contribution of actin filament bending"
 function energy_actin_bending(f::Actin_Filament, s::State{T}, parA, Lxx, Lxy, Lyx, Lyy) where {T}
     energy = zero(T); # Pre-allocate energy
-    seg_lengths = get_segment_lengths(f, s, Lxx, Lxy, Lyx, Lyy); # Dimensional
     # Apply bending energy at interior nodes
-    for i = 1:length(s.an[f.index])-2 
+    for i = 1:length(s.an[f.index])-2
         # Extract physical positions of plus node
         xp = s.an[f.index][i+2][1]*Lxx + s.an[f.index][i+2][2]*Lyx;
         yp = s.an[f.index][i+2][1]*Lxy + s.an[f.index][i+2][2]*Lyy;
@@ -67,7 +67,8 @@ function energy_actin_bending(f::Actin_Filament, s::State{T}, parA, Lxx, Lxy, Ly
         xm = s.an[f.index][i][1]*Lxx + s.an[f.index][i][2]*Lyx;
         ym = s.an[f.index][i][1]*Lxy + s.an[f.index][i][2]*Lyy;
         # Compute numerical second derivatives
-        L01 = seg_lengths[i]; L12 = seg_lengths[i+1]; # Extract segment lengths
+        L01 = get_segment_length(f, s, f.segments[i], Lxx, Lxy, Lyx, Lyy);
+        L12 = get_segment_length(f, s, f.segments[i+1], Lxx, Lxy, Lyx, Lyy); # Extract segment lengths
         avl = (L01 + L12)/2; # Average length
         ddfx = ((xp-xc)/L12 - (xc-xm)/L01)/avl; # Numerical second derivative (x)
         ddfy = ((yp-yc)/L12 - (yc-ym)/L01)/avl; # Numerical second derivative (y)
@@ -111,8 +112,13 @@ end
 function energy_myosin_actin(m::Myosin_Motor, s::State{T}, s_old::State{Float64}, parN, parM, Lxx, Lxy, Lyx, Lyy) where {T}
     energy = zero(T); # Pre-allocate energy
     # Filament lengths, used to scale velocity
-    L1 = sum(get_segment_lengths(m.f1, s, Lxx, Lxy, Lyx, Lyy));
-    L2 = sum(get_segment_lengths(m.f2, s, Lxx, Lxy, Lyx, Lyy));
+    L1 = zero(T); L2 = zero(T); # Pre-allocate filament lengths
+    for seg in m.f1.segments
+        L1 += get_segment_length(m.f1, s, seg, Lxx, Lxy, Lyx, Lyy)
+    end
+    for seg in m.f1.segments
+        L2 += get_segment_length(m.f2, s, seg, Lxx, Lxy, Lyx, Lyy)
+    end
     # Linear component
     energy += parM.Fs/parM.Vm*( L1*(s.mp[m.index][1] - s_old.mp[m.index][1] ))^2/( 2*parN.dt );
     energy += parM.Fs/parM.Vm*( L2*(s.mp[m.index][2] - s_old.mp[m.index][2] ))^2/( 2*parN.dt );

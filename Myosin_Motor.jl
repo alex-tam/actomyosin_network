@@ -28,45 +28,45 @@ function get_motor_relative_pos_filament(s::State, l::Cross_Link, Lxx, Lxy, Lyx,
 end
 
 "Convert relative position along filaments to relative position along segments"
-function get_motor_relative_pos_segment(m::Myosin_Motor, s::State, Lxx, Lxy, Lyx, Lyy)
-    # Steps 1-3 must be dimensional for non-square domains
-    # 1. Calculate dimensional segment lengths
-    seg_lengths_1 = get_segment_lengths(m.f1, s, Lxx, Lxy, Lyx, Lyy);
-    seg_lengths_2 = get_segment_lengths(m.f2, s, Lxx, Lxy, Lyx, Lyy);
-    # 2. Determine index of relevant segments
-    cumulative_length_1 = cumsum(seg_lengths_1);
-    cumulative_length_2 = cumsum(seg_lengths_2);
-    scaled_mp_1 = s.mp[m.index][1]*cumulative_length_1[end];
-    scaled_mp_2 = s.mp[m.index][2]*cumulative_length_2[end];
-    myosin_seg_1::Int = 1; myosin_seg_2::Int = 1;
-    for i = 1:(length(cumulative_length_1)-1)
-        if scaled_mp_1 > cumulative_length_1[i]
-            myosin_seg_1 += 1;
+function get_motor_relative_pos_segment(m::Myosin_Motor, s::State{T}, Lxx, Lxy, Lyx, Lyy) where {T}
+    # Must be dimensional for non-square domains
+    # 1. Compute filament lengths
+    L1 = zero(T); L2 = zero(T); # Pre-allocate filament lengths
+    for seg in m.f1.segments
+        L1 += get_segment_length(m.f1, s, seg, Lxx, Lxy, Lyx, Lyy)
+    end
+    for seg in m.f1.segments
+        L2 += get_segment_length(m.f2, s, seg, Lxx, Lxy, Lyx, Lyy)
+    end
+    # 2. Determine dimensional motor positions
+    m1 = s.mp[m.index][1]*L1; m2 = s.mp[m.index][2]*L2;
+    # 3. Determine index of relevant segments
+    L1_cumulative = zero(T); L2_cumulative = zero(T); # Pre-allocate cumulative lengths
+    seg1::Int = length(m.f1.segments); seg2::Int = length(m.f2.segments); # Pre-allocate
+    for i = 1:length(m.f1.segments)
+        L1_cumulative += get_segment_length(m.f1, s, m.f1.segments[i], Lxx, Lxy, Lyx, Lyy);
+        if m1 <= L1_cumulative
+            seg1 = i; break
         end
     end
-    for i = 1:(length(cumulative_length_2)-1)
-        if scaled_mp_2 > cumulative_length_2[i]
-            myosin_seg_2 += 1;
+    for i = 1:length(m.f2.segments)
+        L2_cumulative += get_segment_length(m.f2, s, m.f2.segments[i], Lxx, Lxy, Lyx, Lyy);
+        if m2 <= L2_cumulative
+            seg2 = i; break
         end
     end
-    # 3. Determine relative position on segment
-    if myosin_seg_1 == 1
-        myosin_seg_rel_pos_1 = scaled_mp_1/(cumulative_length_1[myosin_seg_1])
-    else
-        myosin_seg_rel_pos_1 = (scaled_mp_1-cumulative_length_1[myosin_seg_1-1])/(cumulative_length_1[myosin_seg_1]-cumulative_length_1[myosin_seg_1-1])
-    end
-    if myosin_seg_2 == 1
-        myosin_seg_rel_pos_2 = scaled_mp_2/(cumulative_length_2[myosin_seg_2])
-    else
-        myosin_seg_rel_pos_2 = (scaled_mp_2-cumulative_length_2[myosin_seg_2-1])/(cumulative_length_2[myosin_seg_2]-cumulative_length_2[myosin_seg_2-1])
-    end
-    return myosin_seg_1, myosin_seg_2, myosin_seg_rel_pos_1, myosin_seg_rel_pos_2
+    # 4. Determine relative position along segment
+    L1_minus = L1_cumulative - get_segment_length(m.f1, s, m.f1.segments[seg1], Lxx, Lxy, Lyx, Lyy);
+    L2_minus = L2_cumulative - get_segment_length(m.f2, s, m.f2.segments[seg2], Lxx, Lxy, Lyx, Lyy);
+    rel_mp1 = (m1 - L1_minus)/(L1_cumulative - L1_minus);
+    rel_mp2 = (m2 - L2_minus)/(L2_cumulative - L2_minus);
+    return seg1, seg2, rel_mp1, rel_mp2
 end
 
 "Obtain dimensional, translated motor position"
 function get_motor_pos(m::Myosin_Motor, s::State{T}, Lxx, Lxy, Lyx, Lyy) where {T}
     # Find relative position along segment
-    seg1, seg2, relative_pos1, relative_pos2 = get_motor_relative_pos_segment(m::Myosin_Motor, s::State, Lxx, Lxy, Lyx, Lyy)
+    seg1, seg2, relative_pos1, relative_pos2 = get_motor_relative_pos_segment(m, s, Lxx, Lxy, Lyx, Lyy)
     # Obtain segment nodes position
     m1x, m1y, p1x, p1y = get_segment_nodes(m.f1, m.f1.segments[seg1], s);
     m2x, m2y, p2x, p2y = get_segment_nodes(m.f2, m.f2.segments[seg2], s);

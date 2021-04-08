@@ -55,6 +55,13 @@ function get_segment_lengths(f::Actin_Filament, s::State{T}, Lxx, Lxy, Lyx, Lyy)
     return Ls
 end
 
+"Obtain dimensional length of a particular segment"
+function get_segment_length(f::Actin_Filament, s::State{T}, seg::Segment, Lxx, Lxy, Lyx, Lyy) where {T}
+    mx, my, px, py = get_segment_nodes(f, seg, s, Lxx, Lxy, Lyx, Lyy); # Obtain segment nodes (dimensional, un-translated)
+    Ls = sqrt((px - mx)^2 + (py - my)^2); # Compute segment length
+    return Ls
+end
+
 "Obtain dimensionless, un-translated node positions"
 function get_segment_nodes(f::Actin_Filament, seg::Segment, s::State{T}) where {T}
     mx = s.an[f.index][seg.index][1];
