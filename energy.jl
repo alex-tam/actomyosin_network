@@ -2,11 +2,11 @@
 # Alex Tam, 12/10/2020
 
 "Energy functional"
-function energy_functional(x::Vector{T}, s_old::State{Float64}, af, xl, mm, parN, parA, parM, Lxx, Lxy, Lyx, Lyy) where{T}
+function energy_functional(x::Vector{T}, s_old::State{Float64}, af, xl, mm, random, parN, parA, parM, Lxx, Lxy, Lyx, Lyy) where{T}
     s = build_state(x, af, mm); # Rebuild state from vector input
     energy = zero(T); # Pre-allocate energy
     for f in af
-        # energy += energy_actin_thermal(f, s, parN, parA, Lxx, Lxy, Lyx, Lyy);
+        energy += energy_actin_thermal(f, s, random, parN, parA, Lxx, Lxy, Lyx, Lyy);
         energy += energy_actin_spring(f, s, parA, Lxx, Lxy, Lyx, Lyy);
         energy += energy_actin_drag(f, s, s_old, parN, parA, Lxx, Lxy, Lyx, Lyy);
         energy += energy_actin_bending(f, s, parA, Lxx, Lxy, Lyx, Lyy);
@@ -22,8 +22,23 @@ function energy_functional(x::Vector{T}, s_old::State{Float64}, af, xl, mm, parN
 end
 
 "Energy contribution of thermal forces on actin filaments"
-function energy_actin_thermal(f::Actin_Filament, s::State{T}, parN, parA, Lxx, Lxy, Lyx, Lyy) where {T}
+function energy_actin_thermal(f::Actin_Filament, s::State{T}, random, parN, parA, Lxx, Lxy, Lyx, Lyy) where {T}
     energy = zero(T); # Pre-allocate energy
+    seg_lengths = get_segment_lengths(f, s, Lxx, Lxy, Lyx, Lyy); # Dimensional
+    for i = 1:length(s.an[f.index])
+        if i == 1
+            avl = seg_lengths[i]/2; # Minus end
+        elseif i == length(s.an[f.index])
+            avl = seg_lengths[end]/2; # Plus end
+        else
+            avl = (seg_lengths[i-1] + seg_lengths[i])/2; # Interior nodes
+        end
+        # px = s.an[f.index][i][1]*Lxx + s.an[f.index][i][2]*Lyx; 
+        # py = s.an[f.index][i][1]*Lxy + s.an[f.index][i][2]*Lyy; # Dimensional positions
+        px = s.an[f.index][i][1]*Lxx; 
+        py = s.an[f.index][i][2]*Lyy; # Dimensional positions
+        energy -= sqrt(2*parA.kb*parA.T*parA.lambda_a*avl/parN.dt)*( px*random[f.index][i][1] + py*random[f.index][i][2] ); # Thermal energy contribution
+    end
     return energy
 end
 
