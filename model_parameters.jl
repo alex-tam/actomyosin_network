@@ -10,9 +10,9 @@
     dt::Float64 = 0.1 # [s] Time step size
     lxx::Float64 = 2.5 # [μm] Reference domain width (x)
     lyy::Float64 = 2.5 # [μm] Reference domain width (y)
-    xTol::Float64 = 1e-8 # [-] DOF tolerance for optimisation
-    fTol::Float64 = 1e-8 # [-] Objective function tolerance for optimisation
-    gTol::Float64 = 1e-8 # [-] Gradient tolerance for optimisation
+    xTol::Float64 = 1e-6 # [-] DOF tolerance for optimisation
+    fTol::Float64 = 1e-6 # [-] Objective function tolerance for optimisation
+    gTol::Float64 = 1e-6 # [-] Gradient tolerance for optimisation
 end
 
 "Actin filament properties"
@@ -25,6 +25,8 @@ end
     lambda_pf::Float64 = 30.0 # [pN/μm*s] Protein friction drag coefficient
     k_off::Float64 = 0.04 # [/filament/s] Turnover rate
     k_p::Float64 = 0.0 # [/filament/s] Polymerisation rate
+    kb::Float64 = 1.380649e-5 # [μm*pN/K] Boltzmann constant
+    T::Float64 = 298.15 # [K] Temperature
 end
 
 "Myosin motor properties"

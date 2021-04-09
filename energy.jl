@@ -6,6 +6,7 @@ function energy_functional(x::Vector{T}, s_old::State{Float64}, af, xl, mm, parN
     s = build_state(x, af, mm); # Rebuild state from vector input
     energy = zero(T); # Pre-allocate energy
     for f in af
+        # energy += energy_actin_thermal(f, s, parN, parA, Lxx, Lxy, Lyx, Lyy);
         energy += energy_actin_spring(f, s, parA, Lxx, Lxy, Lyx, Lyy);
         energy += energy_actin_drag(f, s, s_old, parN, parA, Lxx, Lxy, Lyx, Lyy);
         energy += energy_actin_bending(f, s, parA, Lxx, Lxy, Lyx, Lyy);
@@ -17,6 +18,12 @@ function energy_functional(x::Vector{T}, s_old::State{Float64}, af, xl, mm, parN
         energy += energy_myosin_spring(m, s, parM, Lxx, Lxy, Lyx, Lyy);
         energy += energy_myosin_actin(m, s, s_old, parN, parM, Lxx, Lxy, Lyx, Lyy);
     end
+    return energy
+end
+
+"Energy contribution of thermal forces on actin filaments"
+function energy_actin_thermal(f::Actin_Filament, s::State{T}, parN, parA, Lxx, Lxy, Lyx, Lyy) where {T}
+    energy = zero(T); # Pre-allocate energy
     return energy
 end
 
@@ -67,8 +74,8 @@ function energy_actin_bending(f::Actin_Filament, s::State{T}, parA, Lxx, Lxy, Ly
         xm = s.an[f.index][i][1]*Lxx + s.an[f.index][i][2]*Lyx;
         ym = s.an[f.index][i][1]*Lxy + s.an[f.index][i][2]*Lyy;
         # Compute numerical second derivatives
-        L01 = get_segment_length(f, s, f.segments[i], Lxx, Lxy, Lyx, Lyy);
-        L12 = get_segment_length(f, s, f.segments[i+1], Lxx, Lxy, Lyx, Lyy); # Extract segment lengths
+        L01 = get_segment_length(f, s, f.segments[i], Lxx, Lxy, Lyx, Lyy); # Left segment length
+        L12 = get_segment_length(f, s, f.segments[i+1], Lxx, Lxy, Lyx, Lyy); # Right segment length
         avl = (L01 + L12)/2; # Average length
         ddfx = ((xp-xc)/L12 - (xc-xm)/L01)/avl; # Numerical second derivative (x)
         ddfy = ((yp-yc)/L12 - (yc-ym)/L01)/avl; # Numerical second derivative (y)
