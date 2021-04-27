@@ -6,8 +6,8 @@
 @with_kw struct Numerical_Parameters
     nA::Int = 50 # [-] Number of actin filaments
     nM::Int = 10 # [-] Number of myosin motors
-    nT::Int = 601 # [-] Number of time steps
-    dt::Float64 = 0.1 # [s] Time step size
+    nT::Int = 1201 # [-] Number of time steps
+    dt::Float64 = 0.05 # [s] Time step size
     lxx::Float64 = 2.5 # [μm] Reference domain width (x)
     lyy::Float64 = 2.5 # [μm] Reference domain width (y)
     xTol::Float64 = 1e-6 # [-] DOF tolerance for optimisation
