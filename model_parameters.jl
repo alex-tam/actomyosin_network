@@ -10,9 +10,9 @@
     dt::Float64 = 0.05 # [s] Time step size
     lxx::Float64 = 2.5 # [μm] Reference domain width (x)
     lyy::Float64 = 2.5 # [μm] Reference domain width (y)
-    xTol::Float64 = 1e-6 # [-] DOF tolerance for optimisation
-    fTol::Float64 = 1e-6 # [-] Objective function tolerance for optimisation
-    gTol::Float64 = 1e-6 # [-] Gradient tolerance for optimisation
+    xTol::Float64 = 1e-8 # [-] DOF tolerance for optimisation
+    fTol::Float64 = 1e-8 # [-] Objective function tolerance for optimisation
+    gTol::Float64 = 1e-8 # [-] Gradient tolerance for optimisation
 end
 
 "Actin filament properties"
