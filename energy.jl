@@ -6,7 +6,7 @@ function energy_functional(x::Vector{T}, s_old::State{Float64}, af, xl, mm, rand
     s = build_state(x, af, mm); # Rebuild state from vector input
     energy = zero(T); # Pre-allocate energy
     for f in af
-        energy += energy_actin_thermal(f, s, random, parN, parA, Lxx, Lxy, Lyx, Lyy);
+        # energy += energy_actin_thermal(f, s, random, parN, parA, Lxx, Lxy, Lyx, Lyy);
         energy += energy_actin_spring(f, s, parA, Lxx, Lxy, Lyx, Lyy);
         energy += energy_actin_drag(f, s, s_old, parN, parA, Lxx, Lxy, Lyx, Lyy);
         energy += energy_actin_bending(f, s, parA, Lxx, Lxy, Lyx, Lyy);
