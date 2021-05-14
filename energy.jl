@@ -57,18 +57,24 @@ end
 function energy_actin_drag(f::Actin_Filament, s::State{T}, s_old::State{Float64}, parN, parA, Lxx, Lxy, Lyx, Lyy) where {T}
     energy = zero(T); # Pre-allocate energy
     # Distribute drag along segments
-    nPoints = 5; # Number of data points to sample per segment
-    for i = 1:(length(s.an[f.index])-1) # Loop over segments
+    nPoints = 5; # (Odd) number of data points to sample per segment
+    for i = 1:(length(f.segments)) # Loop over segments
         Ls = get_segment_length(f, s, f.segments[i], Lxx, Lxy, Lyx, Lyy);
-        avl = Ls/nPoints;
+        ds = Ls/(nPoints-1);
         for j = 1:nPoints
             # Extract data points
-            pnx = s.an[f.index][i][1] + (j-0.5)/nPoints*(s.an[f.index][i+1][1]-s.an[f.index][i][1]);
-            pny = s.an[f.index][i][2] + (j-0.5)/nPoints*(s.an[f.index][i+1][2]-s.an[f.index][i][2]); # Current dimensionless node positions
-            pox = s_old.an[f.index][i][1] + (j-0.5)/nPoints*(s_old.an[f.index][i+1][1]-s_old.an[f.index][i][1]);
-            poy = s_old.an[f.index][i][2] + (j-0.5)/nPoints*(s_old.an[f.index][i+1][2]-s_old.an[f.index][i][2]); # Old dimensionless node positions
-            # Add energy contirbution
-            energy += parA.lambda_a*avl*( ((pnx-pox)*Lxx + (pny-poy)*Lyx)^2 + ((pnx-pox)*Lxy + (pny-poy)*Lyy)^2 )/(2*parN.dt);
+            pnx = s.an[f.index][i][1] + (j-1)/(nPoints-1)*(s.an[f.index][i+1][1]-s.an[f.index][i][1]);
+            pny = s.an[f.index][i][2] + (j-1)/(nPoints-1)*(s.an[f.index][i+1][2]-s.an[f.index][i][2]); # Current dimensionless node positions
+            pox = s_old.an[f.index][i][1] + (j-1)/(nPoints-1)*(s_old.an[f.index][i+1][1]-s_old.an[f.index][i][1]);
+            poy = s_old.an[f.index][i][2] + (j-1)/(nPoints-1)*(s_old.an[f.index][i+1][2]-s_old.an[f.index][i][2]); # Old dimensionless node positions
+            # Add energy contirbution (Simpson's rule)
+            if (j == 1) || (j == nPoints)
+                energy += parA.lambda_a*(ds/3)*( ((pnx-pox)*Lxx + (pny-poy)*Lyx)^2 + ((pnx-pox)*Lxy + (pny-poy)*Lyy)^2 )/(2*parN.dt);
+            elseif iseven(j) == true
+                energy += parA.lambda_a*(4*ds/3)*( ((pnx-pox)*Lxx + (pny-poy)*Lyx)^2 + ((pnx-pox)*Lxy + (pny-poy)*Lyy)^2 )/(2*parN.dt);
+            else
+                energy += parA.lambda_a*(2*ds/3)*( ((pnx-pox)*Lxx + (pny-poy)*Lyx)^2 + ((pnx-pox)*Lxy + (pny-poy)*Lyy)^2 )/(2*parN.dt);
+            end
         end
     end
     return energy
