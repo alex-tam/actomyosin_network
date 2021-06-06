@@ -71,8 +71,8 @@ function run_simulations()
             writedlm("angle_roc-$par.txt", angle_roc); # Write time-averaged angle rate of change to file
             writedlm("motor_pos-$par.txt", motor_pos); # Write time-averaged motor position to file
             writedlm("motor_angle-$par.txt", motor_angle); # Write time-averaged motor angle to file
-            writedlm("pd_end_bins-par-$i-trial-$j.txt", Bins); # Write paried-distances bins to file
-            writedlm("pd_end_counts-par-$i-trial-$j.txt", Hist); # Write paired-distances counts to file
+            writedlm("pd_end_bins-$par-trial-$j.txt", Bins); # Write paried-distances bins to file
+            writedlm("pd_end_counts-$par-trial-$j.txt", Hist); # Write paired-distances counts to file
         end
     end
 end
