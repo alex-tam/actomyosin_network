@@ -2,7 +2,7 @@
 # Alex Tam, 12/10/2020
 
 "Energy functional"
-function energy_functional(x::Vector{T}, s_old::State{Float64}, af, xl, mm, random, parN, parA, parM, Lxx, Lxy, Lyx, Lyy) where{T}
+function energy_functional(x::Vector{T}, s_old::State{Float64}, af, xl, mm, parN, parA, parM, Lxx, Lxy, Lyx, Lyy) where{T}
     s = build_state(x, af, mm); # Rebuild state from vector input
     energy = zero(T); # Pre-allocate energy
     for f in af
