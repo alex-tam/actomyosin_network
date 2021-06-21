@@ -23,7 +23,6 @@ function actomyosin_network(parN, parA, parM, par, trial)
     xl = intersection_search(state, af, mm); # Initialise cross-links
     mm, xl, state = myosin_ic(state, mm, parN, xl, Lxx, Lxy, Lyx, Lyy); # Initialise myosin motors
     state_old = state; # Store initial state to compute force
-    random = thermal(af, state); # Random variables for thermal motion
     # Time-stepping
     animation = @animate for i = 1:parN.nT
         # Write final DOF vector to file
@@ -40,7 +39,7 @@ function actomyosin_network(parN, parA, parM, par, trial)
         Angle_ROC[i] = motor_angle_roc(parN, mm, state, state_old, Lxx, Lxy, Lyx, Lyy); # savefig("actomyosin_angle_roc-$par-trial-$trial.svg"); # Angle rate of change
         Motor_Pos[i] = motor_position(mm, state); # savefig("actomyosin_angle_roc-$par-trial-$trial.svg"); # Myosin motor head positions
         Motor_Angle[i] = motor_angle(mm, state, parN, Lxx, Lxy, Lyx, Lyy); # savefig("actomyosin_angle_roc-$par-trial-$trial.svg"); # Myosin motor angles
-        Force[i] = network_force(state, state_old, af, xl, mm, random, parN, parA, parM, Lxx, Lxy, Lyx, Lyy); # Force
+        Force[i] = network_force(state, state_old, af, xl, mm, parN, parA, parM, Lxx, Lxy, Lyx, Lyy); # Force
         # Draw network
         draw_network(state, af, xl, mm, parN, parA, Force[i], Lxx, Lxy, Lyx, Lyy);
         if i == 1
@@ -53,10 +52,9 @@ function actomyosin_network(parN, parA, parM, par, trial)
             af = segment_translations(state, af); # Update filament translations
             xl = intersection_search(state, af, mm); # Update cross-links
             mm, xl, state = myosin_turnover(state, xl, mm, parN, parM, Lxx, Lxy, Lyx, Lyy); # Myosin binding/unbinding
-            random = thermal(af, state); # Random variables for thermal motion
             # Compute solution and store data
             state_old = state; # Store current state for energy functional
-            new_dof = optimise_network(state_old, af, xl, mm, random, parN, parA, parM, Lxx, Lxy, Lyx, Lyy); # Compute network solution
+            new_dof = optimise_network(state_old, af, xl, mm, parN, parA, parM, Lxx, Lxy, Lyx, Lyy); # Compute network solution
             state = build_state(new_dof, af, mm); # Construct State from vector
         end
     end
