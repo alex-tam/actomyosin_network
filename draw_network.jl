@@ -136,7 +136,7 @@ function draw_stress(parN, Force, time_step, Lxx, Lyy)
     plot!(times, movingaverage(syx, 100), color = "green", linewidth = 2, linestyle = :dash, label = L"\sigma_{yx}");
     plot!(times, movingaverage(syy, 100), color = "blue", linewidth = 2, linestyle = :dash, label = L"\sigma_{yy}");
     # Plot integrated stress
-    p2 = plot(times, sxx_tot, color = "orange", linewidth=2, label = L"\int \sigma_{xx} \; dt", xlabel = L"$t$", ylabel = "Integrated Stree (pNs/μm)", legend=:bottomleft, size = (1000, 500));
+    p2 = plot(times, sxx_tot, color = "orange", linewidth=2, label = L"\int \sigma_{xx} \; dt", xlabel = L"$t$", ylabel = "Integrated Stress (pNs/μm)", legend=:bottomleft, size = (1000, 500));
     plot!(times, sxy_tot, color = "purple", linewidth=2, label = L"\int \sigma_{xy} \;dt");
     plot!(times, syx_tot, color = "green", linewidth=2, label = L"\int \sigma_{yx} \;dt");
     plot!(times, syy_tot, color = "blue", linewidth=2, label = L"\int \sigma_{yy} \;dt");
