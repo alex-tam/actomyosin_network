@@ -122,7 +122,7 @@ function energy_myosin_actin(m::Myosin_Motor, s::State{T}, s_old::State{Float64}
     for seg in m.f1.segments
         L1 += get_segment_length(m.f1, s, seg, Lxx, Lxy, Lyx, Lyy)
     end
-    for seg in m.f1.segments
+    for seg in m.f2.segments
         L2 += get_segment_length(m.f2, s, seg, Lxx, Lxy, Lyx, Lyy)
     end
     # Linear component
